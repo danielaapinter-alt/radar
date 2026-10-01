@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Radar Corporativo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a trading-desk "fita" — condensed header with edition timeline, then summary + market strip, then filterable lanes (Brasil, EUA, Proventos, Assembleias, Agenda). */
+:root{
+  --bg:#EEF1F0; --surface:#FFFFFF; --ink:#14201D; --muted:#5B6B66; --line:#D5DDDA;
+  --accent:#1F4FA8; --accent-soft:#E3EAF7;
+  --br:#0C7A4E; --br-soft:#E0F1E8; --us:#1F4FA8; --us-soft:#E3EAF7;
+  --up:#0C7A4E; --down:#B3261E; --warn:#A35F00; --warn-soft:#FBEBD3;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1513; --surface:#17201D; --ink:#E4ECE9; --muted:#93A39E; --line:#2A3632;
+  --accent:#8AB0F5; --accent-soft:#1D2A44;
+  --br:#5BCB95; --br-soft:#15302A; --us:#8AB0F5; --us-soft:#1D2A44;
+  --up:#5BCB95; --down:#F08A80; --warn:#E9B160; --warn-soft:#3A2C14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1513; --surface:#17201D; --ink:#E4ECE9; --muted:#93A39E; --line:#2A3632;
+  --accent:#8AB0F5; --accent-soft:#1D2A44;
+  --br:#5BCB95; --br-soft:#15302A; --us:#8AB0F5; --us-soft:#1D2A44;
+  --up:#5BCB95; --down:#F08A80; --warn:#E9B160; --warn-soft:#3A2C14; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:18px 48px;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.brand h1{font-family:var(--f-display);font-stretch:72%;font-weight:800;font-size:clamp(28px,5vw,44px);line-height:.95;margin:0;letter-spacing:-.01em;text-transform:uppercase}
+.brand .sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:6px}
+.daynav{display:flex;align-items:center;gap:6px}
+.daynav button,.chip,.seg button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px}
+.daynav button{width:34px;height:34px;font-size:18px;line-height:1}
+.daynav button:disabled{opacity:.35;cursor:default}
+.daynav button.dl{width:auto;height:34px;padding:0 14px;font-size:13px;font-weight:600;background:var(--ink);color:var(--bg);border-color:var(--ink);margin-left:6px}
+.dlmsg{font-size:12px;color:var(--muted);width:100%;text-align:right}
+.offline-note{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn)}
+.daynav .day{font-family:var(--f-display);font-stretch:85%;font-weight:700;font-size:18px;min-width:170px;text-align:center;text-transform:capitalize}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.timeline{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.timeline .lbl{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.chip{padding:6px 12px;font-size:13px;display:inline-flex;gap:8px;align-items:baseline}
+.chip time{font-family:var(--f-mono);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .new{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:var(--warn)}
+
+.lead{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px}
+@media (max-width:820px){.lead{grid-template-columns:1fr}}
+.summary{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.summary h2{font-family:var(--f-display);font-stretch:85%;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+.summary p{margin:0;font-size:16px;max-width:65ch}
+.summary .stamp{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-top:12px}
+.tape{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;align-content:start}
+.q{background:var(--surface);padding:10px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.q .n{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.q .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:18px;font-weight:600}
+.q .d{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600}
+.q .note{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.up{color:var(--up)} .down{color:var(--down)}
+
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;border-bottom:1px solid var(--line)}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{padding:7px 12px;font-size:13px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.seg button .ct{font-family:var(--f-mono);font-weight:500;opacity:.75;margin-left:6px}
+.search{flex:1 1 180px;min-width:0;display:flex}
+.search input{width:100%;font:inherit;font-size:14px;padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+
+section.lane{display:flex;flex-direction:column;gap:10px}
+section.lane>h3{font-family:var(--f-display);font-stretch:72%;font-weight:800;font-size:24px;text-transform:uppercase;margin:6px 0 0;display:flex;align-items:baseline;gap:10px;text-wrap:balance}
+section.lane>h3 small{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0}
+.news{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+@media (max-width:420px){.news{grid-template-columns:1fr}}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.item .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tk{font-family:var(--f-mono);font-weight:600;font-size:13px;padding:2px 7px;border-radius:4px}
+.tk.br{background:var(--br-soft);color:var(--br)} .tk.us{background:var(--us-soft);color:var(--us)}
+.co{font-size:13px;color:var(--muted);min-width:0}
+.mv{margin-left:auto;font-family:var(--f-mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.item h4{margin:0;font-size:15px;font-weight:600;line-height:1.35;text-wrap:balance}
+.item p{margin:0;font-size:14px;color:var(--ink);opacity:.88}
+.item .src{font-size:12px;color:var(--muted)}
+.item .src a{color:var(--accent)}
+.tag{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
+th{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.dt{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.jcp{background:var(--accent-soft);color:var(--accent)}
+.pill.div{background:var(--br-soft);color:var(--br)}
+.pill.esp{background:var(--warn-soft);color:var(--warn)}
+.pill.hoje{background:var(--warn-soft);color:var(--warn)}
+.pill.novo{background:var(--ink);color:var(--bg)}
+.pauta{font-size:13px;color:var(--muted);max-width:52ch}
+.agenda{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.agenda .row{display:grid;grid-template-columns:72px 44px minmax(0,1fr);gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:baseline}
+.agenda .row:last-child{border-bottom:0}
+.agenda .h{font-family:var(--f-mono);font-weight:600;font-variant-numeric:tabular-nums}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:28px 20px;text-align:center;color:var(--muted)}
+.empty strong{display:block;color:var(--ink);font-family:var(--f-display);font-stretch:85%;font-size:20px;margin-bottom:6px}
+.sources{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 14px}
+.sources a{color:var(--muted)}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion:no-preference){.item,.q{transition:background .2s}}
+</style>
+<style>body{margin:0} [hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Radar Corporativo</h1>
+      <div class="sub">B3 · NYSE/Nasdaq — notícias, proventos e assembleias</div>
+    </div>
+    <div class="daynav">
+      <button id="prevDay" aria-label="Dia anterior">‹</button>
+      <div class="day" id="dayLabel">—</div>
+      <button id="nextDay" aria-label="Próximo dia">›</button>
+      
+    </div>
+  </header>
+
+  <div class="timeline" id="timeline"><span class="lbl">Edições do dia</span></div>
+
+  <div id="content">
+    <div class="empty" id="emptyState">
+      <strong>Carregando o radar…</strong>
+      Cada edição traz as notícias das empresas listadas no Brasil e nos EUA, proventos (dividendos, JCP, rendimentos) e assembleias (AGO, AGE). Novas edições em dias úteis por volta de 7h50, 11h50 e 17h50; a página recarrega sozinha.
+    </div>
+  </div>
+
+  <footer>Dados compilados de fontes públicas a cada edição. Valores e datas de proventos devem ser confirmados no comunicado oficial da companhia (RI, B3/CVM ou SEC) antes de qualquer decisão.</footer>
+</div>
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const state = { eds: [], day: null, edId: null, lane: "tudo", q: "", followLatest: true };
+  try { const l = localStorage.getItem("radar.lane"); if (l) state.lane = l; } catch(e){}
+
+  const fmtDay = d => { try { return new Date(d+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"}); } catch(e){ return d; } };
+  const fmtTime = iso => { try { return new Date(iso).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}); } catch(e){ return ""; } };
+  const days = () => [...new Set(state.eds.map(e => e.dia))].sort().reverse();
+  const edsOf = d => state.eds.filter(e => e.dia === d).sort((a,b) => a.ts < b.ts ? -1 : 1);
+  const cls = v => { const s = String(v||""); return s.startsWith("-") || s.startsWith("−") ? "down" : (s.startsWith("+") ? "up" : ""); };
+  const match = (o) => { if (!state.q) return true; const s = JSON.stringify(o).toLowerCase(); return s.includes(state.q); };
+
+  function render(){
+    const ds = days();
+    if (!ds.length){ return; }
+    if (!state.day || !ds.includes(state.day)) state.day = ds[0];
+    const list = edsOf(state.day);
+    if (state.followLatest || !list.find(e => e.id === state.edId)) state.edId = list[list.length-1].id;
+    const ed = list.find(e => e.id === state.edId);
+
+    $("#dayLabel").textContent = fmtDay(state.day);
+    const i = ds.indexOf(state.day);
+    $("#prevDay").disabled = i >= ds.length-1;
+    $("#nextDay").disabled = i <= 0;
+
+    const tl = $("#timeline");
+    tl.innerHTML = '<span class="lbl">Edições do dia</span>' + list.map((e,ix) =>
+      `<button class="chip" data-ed="${esc(e.id)}" aria-pressed="${e.id===state.edId}"><time>${esc(fmtTime(e.ts))}</time>${esc(e.rotulo||"")}${ix===list.length-1 && i===0 ? '<span class="new">MAIS RECENTE</span>':''}</button>`).join("");
+
+    const br = (ed.brasil||[]).filter(match), us = (ed.eua||[]).filter(match);
+    const pv = (ed.proventos||[]).filter(match), as = (ed.assembleias||[]).filter(match), ag = (ed.agenda||[]).filter(match);
+    const lanes = [["tudo","Tudo",null],["brasil","Brasil",br.length],["eua","EUA",us.length],["proventos","Proventos",pv.length],["assembleias","Assembleias",as.length],["agenda","Agenda",ag.length]];
+    const show = k => state.lane === "tudo" || state.lane === k;
+
+    let h = `<div class="lead">
+      <div class="summary"><h2>Resumo da edição · ${esc(ed.rotulo||"")}</h2><p>${esc(ed.resumo||"")}</p>
+      <div class="stamp">Atualizado ${esc(new Date(ed.ts).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}))} (Brasília)</div></div>
+      <div class="tape">${(ed.mercado||[]).map(m => `<div class="q"><span class="n">${esc(m.nome)}</span><span class="v">${esc(m.valor)}</span><span class="d ${cls(m.var)}">${esc(m.var||"")}</span>${m.nota?`<span class="note">${esc(m.nota)}</span>`:""}</div>`).join("")}</div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Seções">${lanes.map(([k,t,c]) => `<button data-lane="${k}" aria-pressed="${state.lane===k}">${t}${c!=null?`<span class="ct">${c}</span>`:""}</button>`).join("")}</div>
+      <label class="search"><input id="q" type="search" placeholder="Filtrar por ticker ou empresa (ex.: PETR4, Bradesco)" value="${esc(state.q)}" aria-label="Filtrar"></label>
+    </div>`;
+
+    const newsCards = (arr, mk) => arr.length ? `<div class="news">${arr.map(n => `<article class="item">
+        <div class="hd"><span class="tk ${mk}">${esc(n.ticker||"—")}</span><span class="co">${esc(n.empresa||"")}</span>${n.tag?`<span class="tag">${esc(n.tag)}</span>`:""}${n.mov?`<span class="mv ${cls(n.mov)}">${esc(n.mov)}</span>`:""}</div>
+        <h4>${esc(n.titulo)}</h4>${n.resumo?`<p>${esc(n.resumo)}</p>`:""}
+        ${n.url?`<div class="src"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.fonte||"Fonte")} ↗</a></div>`:(n.fonte?`<div class="src">${esc(n.fonte)}</div>`:"")}
+      </article>`).join("")}</div>` : `<div class="empty">Nada ${state.q?"com esse filtro":"nesta edição"}.</div>`;
+
+    if (show("brasil")) h += `<section class="lane"><h3>Brasil <small>${br.length} notícia(s)</small></h3>${newsCards(br,"br")}</section>`;
+    if (show("eua")) h += `<section class="lane"><h3>EUA <small>${us.length} notícia(s)</small></h3>${newsCards(us,"us")}</section>`;
+
+    if (show("proventos")){
+      const pc = t => { const s=(t||"").toLowerCase(); return s.includes("jcp")?"jcp":(s.includes("espec")||s.includes("extra")?"esp":"div"); };
+      const st = s => s ? `<span class="pill ${/hoje/i.test(s)?"hoje":(/anunc|novo/i.test(s)?"novo":"")}">${esc(s)}</span>` : "";
+      h += `<section class="lane"><h3>Proventos <small>dividendos · JCP · rendimentos</small></h3>` + (pv.length ? `<div class="tablebox"><table>
+        <thead><tr><th>Mkt</th><th>Ticker</th><th>Empresa</th><th>Tipo</th><th>Valor/ação</th><th>Data com</th><th>Data ex</th><th>Pagamento</th><th>Status</th></tr></thead><tbody>
+        ${pv.map(p => `<tr><td><span class="tk ${p.mercado==="US"?"us":"br"}">${esc(p.mercado||"BR")}</span></td><td class="num"><strong>${esc(p.ticker)}</strong></td><td>${esc(p.empresa||"")}${p.obs?`<div class="pauta">${esc(p.obs)}</div>`:""}</td><td><span class="pill ${pc(p.tipo)}">${esc(p.tipo)}</span></td><td class="num">${esc(p.valor||"—")}</td><td class="dt">${esc(p.dataCom||"—")}</td><td class="dt">${esc(p.dataEx||"—")}</td><td class="dt">${esc(p.pagamento||"—")}</td><td>${st(p.status)}</td></tr>`).join("")}
+        </tbody></table></div>` : `<div class="empty">Nenhum provento ${state.q?"com esse filtro":"nesta edição"}.</div>`) + `</section>`;
+    }
+    if (show("assembleias")){
+      h += `<section class="lane"><h3>Assembleias <small>AGO · AGE · AGOE · proxy</small></h3>` + (as.length ? `<div class="tablebox"><table>
+        <thead><tr><th>Mkt</th><th>Ticker</th><th>Empresa</th><th>Tipo</th><th>Data</th><th>Formato</th><th>Pauta</th></tr></thead><tbody>
+        ${as.map(a => `<tr><td><span class="tk ${a.mercado==="US"?"us":"br"}">${esc(a.mercado||"BR")}</span></td><td class="num"><strong>${esc(a.ticker)}</strong></td><td>${esc(a.empresa||"")}</td><td><span class="pill jcp">${esc(a.tipo)}</span></td><td class="dt">${esc(a.data||"")}${a.hora?` · ${esc(a.hora)}`:""}</td><td>${esc(a.formato||"")}</td><td class="pauta">${esc(a.pauta||"")}${a.url?` <a href="${esc(a.url)}" target="_blank" rel="noopener">↗</a>`:""}</td></tr>`).join("")}
+        </tbody></table></div>` : `<div class="empty">Nenhuma assembleia ${state.q?"com esse filtro":"nesta edição"}.</div>`) + `</section>`;
+    }
+    if (show("agenda")){
+      h += `<section class="lane"><h3>Agenda <small>indicadores e balanços</small></h3>` + (ag.length ? `<div class="agenda">${ag.map(a => `<div class="row"><span class="h">${esc(a.hora||"")}</span><span class="tk ${a.mercado==="US"?"us":"br"}">${esc(a.mercado||"BR")}</span><span>${esc(a.evento)}</span></div>`).join("")}</div>` : `<div class="empty">Sem eventos ${state.q?"com esse filtro":"nesta edição"}.</div>`) + `</section>`;
+    }
+    if ((ed.fontes||[]).length) h += `<div class="sources"><span>Fontes:</span>${ed.fontes.map(f => `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.titulo)}</a>`).join("")}</div>`;
+
+    const hadFocus = document.activeElement && document.activeElement.id === "q";
+    const pos = hadFocus ? document.activeElement.selectionStart : null;
+    $("#content").innerHTML = h;
+    if (hadFocus){ const inp = $("#q"); inp.focus(); try{ inp.setSelectionRange(pos,pos);}catch(e){} }
+  }
+
+  document.addEventListener("click", ev => {
+    const c = ev.target.closest("[data-ed]");
+    if (c){ state.edId = c.dataset.ed; const l = edsOf(state.day); state.followLatest = (l[l.length-1].id === state.edId && days()[0] === state.day); render(); return; }
+    const ln = ev.target.closest("[data-lane]");
+    if (ln){ state.lane = ln.dataset.lane; try{ localStorage.setItem("radar.lane", state.lane);}catch(e){} render(); return; }
+  });
+  document.addEventListener("input", ev => { if (ev.target.id === "q"){ state.q = ev.target.value.trim().toLowerCase(); render(); } });
+  $("#prevDay").addEventListener("click", () => { const ds = days(); const i = ds.indexOf(state.day); if (i < ds.length-1){ state.day = ds[i+1]; state.edId = null; state.followLatest = false; render(); } });
+  $("#nextDay").addEventListener("click", () => { const ds = days(); const i = ds.indexOf(state.day); if (i > 0){ state.day = ds[i-1]; state.edId = null; state.followLatest = (i-1 === 0); render(); } });
+
+  function showEmpty(title, msg){
+    $("#content").innerHTML = `<div class="empty"><strong>${esc(title)}</strong>${esc(msg)}</div>`;
+  }
+
+  let lastStamp = "";
+  async function load(){
+    try {
+      const r = await fetch("data/edicoes.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const eds = await r.json();
+      const stamp = eds.map(e => e.id).join(",");
+      if (stamp === lastStamp) return;
+      lastStamp = stamp;
+      state.eds = eds;
+      if (!eds.length){ showEmpty("Nenhuma edição ainda", "A primeira edição aparece aqui assim que for publicada."); return; }
+      render();
+    } catch(e){
+      if (!state.eds.length) showEmpty("Não foi possível carregar as edições", "Verifique a conexão e recarregue a página.");
+    }
+  }
+  load();
+  setInterval(load, 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>

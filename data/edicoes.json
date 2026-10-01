@@ -1,0 +1,446 @@
+[
+ {
+  "dia": "2026-10-01",
+  "ts": "2026-10-01T11:30:00-03:00",
+  "rotulo": "Manhã",
+  "resumo": "Ibovespa começa outubro após subir 5,03% em setembro, a maior alta mensal desde janeiro, com eleição presidencial no domingo e debate na Globo hoje à noite. Petróleo perto de US$ 100 sustenta Petrobras, que recebeu R$ 1,03 bi em subvenções a combustíveis. Nos EUA, futuros sobem levemente antes do PCE e do ISM. Bradesco aprovou R$ 3,8 bi em JCP (data com 13/10) e Raízen convocou AGE para 30/10 com aumento do capital autorizado e troca do conselho.",
+  "mercado": [
+   {
+    "nome": "Ibovespa (fech. 30/09)",
+    "valor": "186.340",
+    "var": "+1,37%",
+    "nota": "Setembro: +5,03%"
+   },
+   {
+    "nome": "Dólar (fech. 30/09)",
+    "valor": "R$ 5,174",
+    "var": "-0,76%"
+   },
+   {
+    "nome": "S&P 500 futuro",
+    "valor": "pré-mercado",
+    "var": "+0,2%"
+   },
+   {
+    "nome": "Nasdaq-100 futuro",
+    "valor": "pré-mercado",
+    "var": "+0,1%"
+   },
+   {
+    "nome": "Brent",
+    "valor": "US$ 99,77",
+    "var": "+1,85%"
+   },
+   {
+    "nome": "WTI",
+    "valor": "US$ 91,07",
+    "var": "+0,72%"
+   }
+  ],
+  "brasil": [
+   {
+    "ticker": "PETR4",
+    "empresa": "Petrobras",
+    "tag": "Operacional",
+    "titulo": "Recebe R$ 1,03 bi em subvenções à comercialização de gasolina e diesel",
+    "resumo": "Valor reforça o caixa num momento de Brent perto de US$ 100 o barril.",
+    "fonte": "Money Times",
+    "url": "https://moneytimes.com.br/ibovespa-5-coisas-1-10-26-lils"
+   },
+   {
+    "ticker": "BBDC4",
+    "empresa": "Bradesco",
+    "tag": "Proventos",
+    "titulo": "Aprova R$ 3,8 bi em JCP; data com em 13/10",
+    "resumo": "R$ 0,3766 bruto por PN e R$ 0,3424 por ON; ações ficam ex em 14/10 e pagamento ocorre até 30/04/2027.",
+    "fonte": "Gazeta Mercantil",
+    "url": "https://gazetamercantil.com/bradesco-bbdc4-jcp-r-3-8-bilhoes-quem-tem-direito"
+   },
+   {
+    "ticker": "RAIZ4",
+    "empresa": "Raízen",
+    "tag": "Assembleia",
+    "titulo": "Convoca AGE para 30/10 com aumento do capital autorizado e novo conselho",
+    "resumo": "Pauta inclui limite de até 200 bi de ações no capital autorizado, destituição e eleição do conselho, nova classe de preferenciais (classe B) e programa de units.",
+    "fonte": "Clube FII News",
+    "url": "https://www.clubefiinews.com.br/acoes/raizen-convoca-assembleia-geral-extraordinaria-outubro-2026"
+   },
+   {
+    "ticker": "RCSL4",
+    "empresa": "Recrusul",
+    "tag": "Assembleia",
+    "titulo": "AGE amanhã (02/10) vota grupamento de 4 para 1",
+    "resumo": "Se aprovado, as ações passam a ser negociadas agrupadas a partir de 05/10.",
+    "fonte": "Clube FII News",
+    "url": "https://www.clubefiinews.com.br/acoes/recrusul-assembleia-geral-extraordinaria-2026"
+   },
+   {
+    "ticker": "ITUB4",
+    "empresa": "Itaú Unibanco",
+    "tag": "Proventos",
+    "titulo": "Pagamento de JCP mensal hoje",
+    "resumo": "Bancos (Itaú, Bradesco, Itaúsa, Banestes) pagam JCP nesta quinta; bancos lideraram a alta do Ibovespa no último pregão de setembro.",
+    "fonte": "Money Times",
+    "url": "https://www.moneytimes.com.br/26-empresas-pagam-dividendos-e-jcp-em-outubro-saiba-quais-e-o-calendario-completo-ceci/"
+   },
+   {
+    "ticker": "IBOV",
+    "empresa": "Mercado",
+    "tag": "Macro",
+    "titulo": "Eleição domina o radar: pesquisa mostra Lula 43% x Flávio Bolsonaro 39%",
+    "resumo": "Debate na TV Globo hoje às 21h20; primeiro turno no domingo (04/10).",
+    "fonte": "Money Times",
+    "url": "https://moneytimes.com.br/ibovespa-5-coisas-1-10-26-lils"
+   }
+  ],
+  "eua": [
+   {
+    "ticker": "UTHR",
+    "empresa": "United Therapeutics",
+    "tag": "Jurídico",
+    "mov": "+12,55%",
+    "titulo": "Decisão judicial favorável em patentes de hipertensão pulmonar",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "ticker": "CBOE",
+    "empresa": "Cboe Global Markets",
+    "tag": "Contrato",
+    "mov": "+5,17%",
+    "titulo": "Estende licença de opções do S&P 500 até 2051",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "ticker": "SNPS",
+    "empresa": "Synopsys",
+    "tag": "IA",
+    "mov": "+4,78%",
+    "titulo": "Novas parcerias com OpenAI e Amazon em design de chips",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "ticker": "HPE",
+    "empresa": "Hewlett Packard Enterprise",
+    "tag": "Contrato",
+    "mov": "+3,90%",
+    "titulo": "Fecha acordo de US$ 1,2 bi com a Vultr",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/company-news-oct-1-2026-074300950.html"
+   },
+   {
+    "ticker": "FDS",
+    "empresa": "FactSet",
+    "tag": "Resultado",
+    "mov": "+3,84%",
+    "titulo": "LPA ajustado do 4T FY26 de US$ 4,52, acima do consenso de US$ 4,32",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/company-news-oct-1-2026-074300950.html"
+   },
+   {
+    "ticker": "JBL",
+    "empresa": "Jabil",
+    "tag": "Resultado",
+    "mov": "-10,03%",
+    "titulo": "Resultado abaixo do esperado e revisão de guidance",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "ticker": "MRNA",
+    "empresa": "Moderna",
+    "tag": "Rating",
+    "mov": "-5,35%",
+    "titulo": "Rebaixada pelo Citi apesar da nomeação de novo COO",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "ticker": "MAT",
+    "empresa": "Mattel",
+    "tag": "Gestão",
+    "mov": "-4,24%",
+    "titulo": "Nomeia Roger Lynch como novo CEO e chairman",
+    "fonte": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/company-news-oct-1-2026-074300950.html"
+   }
+  ],
+  "proventos": [
+   {
+    "mercado": "BR",
+    "ticker": "BBDC4",
+    "empresa": "Bradesco",
+    "tipo": "JCP",
+    "valor": "R$ 0,3766",
+    "dataCom": "13/10",
+    "dataEx": "14/10",
+    "pagamento": "até 30/04/27",
+    "status": "Anunciado",
+    "obs": "ON (BBDC3): R$ 0,3424 bruto. Total R$ 3,8 bi."
+   },
+   {
+    "mercado": "BR",
+    "ticker": "ITUB4",
+    "empresa": "Itaú Unibanco",
+    "tipo": "JCP",
+    "valor": "—",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje",
+    "obs": "JCP mensal; confirmar valor no RI."
+   },
+   {
+    "mercado": "BR",
+    "ticker": "BBDC4",
+    "empresa": "Bradesco (mensal)",
+    "tipo": "JCP",
+    "valor": "R$ 0,017",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "ITSA4",
+    "empresa": "Itaúsa",
+    "tipo": "JCP",
+    "valor": "R$ 0,018",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "BEES3",
+    "empresa": "Banestes",
+    "tipo": "JCP",
+    "valor": "R$ 0,029",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "LOGG3",
+    "empresa": "Log Commercial",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,159",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "ALOS3",
+    "empresa": "Allos",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,292",
+    "pagamento": "02/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "JSLG3",
+    "empresa": "JSL",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,740",
+    "pagamento": "02/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "ALUP11",
+    "empresa": "Alupar",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,210",
+    "pagamento": "02/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "ABEV3",
+    "empresa": "Ambev",
+    "tipo": "JCP",
+    "valor": "R$ 0,119",
+    "pagamento": "06/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "RDOR3",
+    "empresa": "Rede D'Or",
+    "tipo": "JCP",
+    "valor": "R$ 0,1841",
+    "dataCom": "24/09",
+    "dataEx": "25/09",
+    "pagamento": "06/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "B3SA3",
+    "empresa": "B3",
+    "tipo": "JCP",
+    "valor": "R$ 0,377",
+    "pagamento": "07/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "TOTS3",
+    "empresa": "Totvs",
+    "tipo": "JCP",
+    "valor": "R$ 0,150",
+    "pagamento": "08/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "LREN3",
+    "empresa": "Lojas Renner",
+    "tipo": "JCP",
+    "valor": "R$ 0,241",
+    "pagamento": "14/10",
+    "status": "Agenda"
+   },
+   {
+    "mercado": "US",
+    "ticker": "DAC",
+    "empresa": "Danaos",
+    "tipo": "Dividendo + especial",
+    "valor": "US$ 6,00",
+    "dataCom": "13/10",
+    "pagamento": "22/10",
+    "status": "Anunciado",
+    "obs": "US$ 1,00 trimestral + US$ 5,00 extraordinário."
+   },
+   {
+    "mercado": "US",
+    "ticker": "AFG",
+    "empresa": "American Financial Group",
+    "tipo": "Dividendo",
+    "valor": "US$ 0,97",
+    "dataCom": "15/10",
+    "pagamento": "23/10",
+    "status": "Anunciado"
+   },
+   {
+    "mercado": "US",
+    "ticker": "LTC",
+    "empresa": "LTC Properties",
+    "tipo": "Dividendo mensal",
+    "valor": "US$ 0,19",
+    "dataCom": "22/10",
+    "pagamento": "30/10",
+    "status": "Anunciado",
+    "obs": "Também 20/11→30/11 e 23/12→31/12."
+   },
+   {
+    "mercado": "US",
+    "ticker": "NKE",
+    "empresa": "Nike",
+    "tipo": "Dividendo",
+    "valor": "—",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje"
+   }
+  ],
+  "assembleias": [
+   {
+    "mercado": "BR",
+    "ticker": "RCSL4",
+    "empresa": "Recrusul",
+    "tipo": "AGE",
+    "data": "02/10",
+    "hora": "09h",
+    "formato": "Presencial (Porto Alegre)",
+    "pauta": "Grupamento 4:1 das ON e PN e ajuste do art. 5º do estatuto.",
+    "url": "https://www.clubefiinews.com.br/acoes/recrusul-assembleia-geral-extraordinaria-2026"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "CMIG4",
+    "empresa": "Cemig",
+    "tipo": "AGE",
+    "data": "16/10",
+    "hora": "11h",
+    "formato": "Digital (Ten Meetings)",
+    "pauta": "Mudanças no Conselho Fiscal e recomposição do Conselho de Administração. Boletim até 12/10.",
+    "url": "https://ri.cemig.com.br/docs/Proposta-da-Administracao-AGE-Cemig-2026-10-16-fcnKW97M.pdf"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "AGRO3",
+    "empresa": "BrasilAgro",
+    "tipo": "AGOE",
+    "data": "21/10",
+    "hora": "14h",
+    "formato": "Digital",
+    "pauta": "Contas do exercício encerrado em 30/06/26, dividendos, Conselho Fiscal; incorporação da Agrifirma.",
+    "url": "https://www.clubefiinews.com.br/acoes/brasilagro-assembleia-geral-ordinaria-extraordinaria-outubro-2026"
+   },
+   {
+    "mercado": "BR",
+    "ticker": "RAIZ4",
+    "empresa": "Raízen",
+    "tipo": "AGE",
+    "data": "30/10",
+    "hora": "11h",
+    "formato": "Digital (TenMeetings)",
+    "pauta": "Capital autorizado até 200 bi de ações, novo conselho, PN classe B e programa de units.",
+    "url": "https://www.clubefiinews.com.br/acoes/raizen-convoca-assembleia-geral-extraordinaria-outubro-2026"
+   }
+  ],
+  "agenda": [
+   {
+    "hora": "10h",
+    "mercado": "BR",
+    "evento": "PMI industrial (S&P Global) — previsão 46,5"
+   },
+   {
+    "hora": "11h",
+    "mercado": "US",
+    "evento": "ISM industrial"
+   },
+   {
+    "hora": "—",
+    "mercado": "US",
+    "evento": "Inflação PCE: cheio esperado 3,7%, núcleo 3,3%"
+   },
+   {
+    "hora": "21h20",
+    "mercado": "BR",
+    "evento": "Debate presidencial na TV Globo"
+   },
+   {
+    "hora": "Dom 04/10",
+    "mercado": "BR",
+    "evento": "1º turno das eleições presidenciais"
+   }
+  ],
+  "fontes": [
+   {
+    "titulo": "Money Times — 5 coisas",
+    "url": "https://moneytimes.com.br/ibovespa-5-coisas-1-10-26-lils"
+   },
+   {
+    "titulo": "Rio Times — Morning Call",
+    "url": "https://www.riotimesonline.com/brazils-financial-morning-call-for-thursday-october-1-2026/"
+   },
+   {
+    "titulo": "InfoMoney — Ibovespa em setembro",
+    "url": "https://www.infomoney.com.br/mercados/ibovespa-sobe-5-no-mes-maior-alta-desde-janeiro-outubro-comeca-com-grande-teste/"
+   },
+   {
+    "titulo": "Money Times — calendário de outubro",
+    "url": "https://www.moneytimes.com.br/26-empresas-pagam-dividendos-e-jcp-em-outubro-saiba-quais-e-o-calendario-completo-ceci/"
+   },
+   {
+    "titulo": "Yahoo Finance — US market today",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "titulo": "Yahoo Finance — Company news",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/company-news-oct-1-2026-074300950.html"
+   }
+  ],
+  "id": "2026-10-01_1130"
+ }
+]
