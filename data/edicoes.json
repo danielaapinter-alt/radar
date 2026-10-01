@@ -1,5 +1,569 @@
 [
  {
+  "agenda": [
+   {
+    "evento": "PMI industrial S&P Global: 44,8 (ago: 46,3), menor em 3,5 anos",
+    "hora": "10h",
+    "mercado": "BR"
+   },
+   {
+    "evento": "Pedidos de seguro-desemprego: 197 mil (4ª queda seguida)",
+    "hora": "9h30",
+    "mercado": "US"
+   },
+   {
+    "evento": "ISM industrial: 54,5 (ago: 54,6); preços pagos 77,9",
+    "hora": "11h",
+    "mercado": "US"
+   },
+   {
+    "evento": "Balanço da Nike",
+    "hora": "Após fech.",
+    "mercado": "US"
+   },
+   {
+    "evento": "Debate presidencial na TV Globo; nova Datafolha prevista hoje",
+    "hora": "21h20",
+    "mercado": "BR"
+   },
+   {
+    "evento": "Produção industrial (agosto) e IPC-Fipe",
+    "hora": "Sex 9h",
+    "mercado": "BR"
+   },
+   {
+    "evento": "Payroll de setembro (consenso ~84 mil vagas)",
+    "hora": "Sex 9h30",
+    "mercado": "US"
+   },
+   {
+    "evento": "1º turno das eleições presidenciais",
+    "hora": "Dom 04/10",
+    "mercado": "BR"
+   }
+  ],
+  "assembleias": [
+   {
+    "data": "02/10",
+    "empresa": "Recrusul",
+    "formato": "Presencial (Porto Alegre)",
+    "hora": "09h",
+    "mercado": "BR",
+    "pauta": "Grupamento 4:1 das ON e PN e ajuste do art. 5º do estatuto.",
+    "ticker": "RCSL4",
+    "tipo": "AGE",
+    "url": "https://www.clubefiinews.com.br/acoes/recrusul-assembleia-geral-extraordinaria-2026"
+   },
+   {
+    "data": "16/10",
+    "empresa": "Cemig",
+    "formato": "Digital (Ten Meetings)",
+    "hora": "11h",
+    "mercado": "BR",
+    "pauta": "Mudanças no Conselho Fiscal e recomposição do Conselho de Administração. Boletim até 12/10.",
+    "ticker": "CMIG4",
+    "tipo": "AGE",
+    "url": "https://ri.cemig.com.br/docs/Proposta-da-Administracao-AGE-Cemig-2026-10-16-fcnKW97M.pdf"
+   },
+   {
+    "data": "21/10",
+    "empresa": "BrasilAgro",
+    "formato": "Digital",
+    "hora": "14h",
+    "mercado": "BR",
+    "pauta": "Contas do exercício encerrado em 30/06/26, dividendos, Conselho Fiscal; incorporação da Agrifirma.",
+    "ticker": "AGRO3",
+    "tipo": "AGOE",
+    "url": "https://www.clubefiinews.com.br/acoes/brasilagro-assembleia-geral-ordinaria-extraordinaria-outubro-2026"
+   },
+   {
+    "data": "30/10",
+    "empresa": "Raízen",
+    "formato": "Digital (TenMeetings)",
+    "hora": "11h",
+    "mercado": "BR",
+    "pauta": "Capital autorizado até 200 bi de ações, novo conselho, PN classe B e programa de units.",
+    "ticker": "RAIZ4",
+    "tipo": "AGE",
+    "url": "https://www.clubefiinews.com.br/acoes/raizen-convoca-assembleia-geral-extraordinaria-outubro-2026"
+   }
+  ],
+  "brasil": [
+   {
+    "empresa": "Azzas 2154",
+    "fonte": "InfoMoney",
+    "mov": "+7,9%",
+    "resumo": "Faixa abaixo das apostas de R$ 4,5–5,5 bi, mas JPMorgan vê avanço no processo: múltiplo implícito de 6,8–7,7x EV/Ebitda, contra ~4x da própria Azzas. Farm responde por ~25% da receita bruta.",
+    "tag": "M&A",
+    "ticker": "AZZA3",
+    "titulo": "Recebe 15 propostas não vinculantes pela Farm Rio, de R$ 3,5 bi a R$ 4 bi",
+    "url": "https://infomoney.com.br/mercados/azzas-mais-proxima-de-vender-a-farm-azza3-salta-na-b3-com-novas-propostas-no-radar"
+   },
+   {
+    "empresa": "Petrobras",
+    "fonte": "InfoMoney / Finance News",
+    "mov": "+1%",
+    "resumo": "Produção sobe 18,4% em 12 meses. Subvenções de gasolina e diesel (junho) somam ~R$ 1,03 bi; acumulado nos programas chega a R$ 13,3 bi. Brent acima de US$ 100 ajuda.",
+    "tag": "Operacional",
+    "ticker": "PETR4",
+    "titulo": "Produção recorde de 4,6 milhões de barris/dia em agosto; recebe R$ 1,03 bi em subvenções",
+    "url": "https://www.infomoney.com.br/mercados/ibovespa-hoje-bolsa-de-valores-ao-vivo-01102026/"
+   },
+   {
+    "empresa": "Bradesco",
+    "fonte": "Finance News",
+    "resumo": "R$ 0,3766 bruto por PN e R$ 0,3424 por ON; ex em 14/10 e pagamento até 30/04/2027.",
+    "tag": "Proventos",
+    "ticker": "BBDC4",
+    "titulo": "Aprova R$ 3,8 bi em JCP; data com em 13/10",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "empresa": "Vale",
+    "fonte": "Finance News",
+    "resumo": "Captação na China ainda em avaliação e sujeita às aprovações de governança.",
+    "tag": "Operacional",
+    "ticker": "VALE3",
+    "titulo": "Avalia emissão de panda bonds de até 3,5 bi de yuans (~US$ 522 mi)",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "empresa": "Iguatemi",
+    "fonte": "Finance News",
+    "resumo": "Inclui participações em Alphaville, Ribeirão Preto, Rio Preto, Praia de Belas e Fashion Outlet.",
+    "tag": "M&A",
+    "ticker": "IGTI11",
+    "titulo": "Conclui venda de fatias em 5 shoppings ao TRX Real Estate FII por R$ 876,1 mi",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "empresa": "Tecnisa",
+    "fonte": "Finance News",
+    "resumo": "Objetivo é levar a cotação de volta acima de R$ 1,00. Atenção a posições doadas/tomadas.",
+    "tag": "Operacional",
+    "ticker": "TCSA3",
+    "titulo": "Aprova grupamento de 10 para 1",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "empresa": "Even",
+    "fonte": "Finance News",
+    "resumo": "Corte de brAA+ citando sensibilidade ao cenário macro e exposição ao segmento de luxo.",
+    "tag": "Rating",
+    "ticker": "EVEN3",
+    "titulo": "S&P rebaixa rating para brAA, com perspectiva negativa",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "empresa": "Nu Holdings",
+    "fonte": "Finance News",
+    "resumo": "Companhia diz que não busca transação com o Monzo e mantém foco em Brasil, México, Colômbia e EUA.",
+    "tag": "M&A",
+    "ticker": "ROXO34",
+    "titulo": "Nega negociação para comprar o britânico Monzo",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "empresa": "JSL",
+    "fonte": "Finance News",
+    "resumo": "Guilherme Sampaio deixa o acúmulo de funções e fica só como CEO; dividendos de R$ 0,74/ação pagos amanhã.",
+    "tag": "Gestão",
+    "ticker": "JSLG3",
+    "titulo": "Eduardo Nauck assume como CFO e DRI",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "empresa": "Raízen",
+    "fonte": "Clube FII News",
+    "resumo": "Pauta inclui nova classe de PN (classe B) e programa de units.",
+    "tag": "Assembleia",
+    "ticker": "RAIZ4",
+    "titulo": "AGE em 30/10 vota capital autorizado de até 200 bi de ações e novo conselho",
+    "url": "https://www.clubefiinews.com.br/acoes/raizen-convoca-assembleia-geral-extraordinaria-outubro-2026"
+   }
+  ],
+  "dia": "2026-10-01",
+  "eua": [
+   {
+    "empresa": "Accenture",
+    "fonte": "Yahoo Finance / TheStreet",
+    "mov": "+19% a +21%",
+    "resumo": "LPA de US$ 3,29 (consenso US$ 3,18) e receita de US$ 18,7 bi. Guidance FY27: receita +3% a 6% e LPA de US$ 14,39–14,81.",
+    "tag": "Resultado",
+    "ticker": "ACN",
+    "titulo": "Dispara ~20% com 4T acima do esperado e bookings recorde de US$ 84,5 bi no ano",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/acn-stock-jumps-accenture-posts-114431202.html"
+   },
+   {
+    "empresa": "Cognizant",
+    "fonte": "TheStreet",
+    "mov": "+11,2%",
+    "resumo": "Setor de serviços de TI reage ao alívio sobre ameaça da IA à demanda.",
+    "tag": "Resultado",
+    "ticker": "CTSH",
+    "titulo": "Sobe na esteira do resultado da Accenture",
+    "url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-oct-01-2026"
+   },
+   {
+    "empresa": "Synopsys",
+    "fonte": "TheStreet",
+    "mov": "+12,3%",
+    "resumo": "Acordos estratégicos em IA impulsionam a ação.",
+    "tag": "Operacional",
+    "ticker": "SNPS",
+    "titulo": "Parcerias com Amazon (US$ 1 bi+) e OpenAI em design de chips",
+    "url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-oct-01-2026"
+   },
+   {
+    "empresa": "Micron",
+    "fonte": "Yahoo Finance / Schwab",
+    "mov": "-1%",
+    "resumo": "LPA de US$ 33,42 (consenso US$ 31,83) e guidance do 1T elevado; mercado preocupado com capex e margens.",
+    "tag": "Resultado",
+    "ticker": "MU",
+    "titulo": "Bate estimativas no 4T fiscal, mas ação recua",
+    "url": "https://finance.yahoo.com/markets/live/stock-market-today-thursday-oct-1-dow-sp-500-nasdaq-080602402.html"
+   },
+   {
+    "empresa": "Corteva",
+    "fonte": "TheStreet / Panabee",
+    "mov": "-81,8% (ajuste)",
+    "resumo": "Distribuição 1:1 de ações da Vylor (record date 24/09). A queda de ~80% em CTVA reflete a separação, não perda de valor; atenção a empréstimos em aberto.",
+    "tag": "Operacional",
+    "ticker": "CTVA",
+    "titulo": "Conclui spin-off da Vylor (VYLR) — queda na tela é ajuste",
+    "url": "https://www.panabee.com/news/corteva-finalizes-vylor-separation-1-1-distribution-set-for-october-1"
+   },
+   {
+    "empresa": "IBM",
+    "fonte": "Schwab",
+    "mov": "+5%",
+    "resumo": "Ação reage bem ao lançamento.",
+    "tag": "Operacional",
+    "ticker": "IBM",
+    "titulo": "Lança ferramenta de IA corporativa 'Bob'",
+    "url": "https://www.schwab.com/learn/story/stock-market-update-open"
+   },
+   {
+    "empresa": "United Therapeutics",
+    "fonte": "Yahoo Finance",
+    "mov": "+12,6%",
+    "resumo": "Vitória em disputa de patentes sustentou forte alta.",
+    "tag": "Jurídico",
+    "ticker": "UTHR",
+    "titulo": "Decisão judicial favorável em patentes de hipertensão pulmonar",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "empresa": "Jabil",
+    "fonte": "Yahoo Finance",
+    "mov": "-10%",
+    "resumo": "Ação entre as maiores quedas do S&P 500.",
+    "tag": "Resultado",
+    "ticker": "JBL",
+    "titulo": "Resultado abaixo do esperado e revisão de guidance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080815180.html"
+   },
+   {
+    "empresa": "Nike",
+    "fonte": "Schwab / Yahoo Finance",
+    "resumo": "Expectativa de vendas fracas na China; dividendo trimestral pago hoje.",
+    "tag": "Resultado",
+    "ticker": "NKE",
+    "titulo": "Divulga balanço após o fechamento, com ação perto da mínima desde 2014",
+    "url": "https://www.schwab.com/learn/story/stock-market-update-open"
+   },
+   {
+    "empresa": "Mattel",
+    "fonte": "Yahoo Finance",
+    "mov": "-4,2%",
+    "resumo": "Mercado reagiu mal à troca de comando.",
+    "tag": "Gestão",
+    "ticker": "MAT",
+    "titulo": "Nomeia Roger Lynch como CEO e chairman",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/company-news-oct-1-2026-074300950.html"
+   }
+  ],
+  "fontes": [
+   {
+    "titulo": "InfoMoney — Ibovespa ao vivo 01/10",
+    "url": "https://www.infomoney.com.br/mercados/ibovespa-hoje-bolsa-de-valores-ao-vivo-01102026/"
+   },
+   {
+    "titulo": "InfoMoney — Azzas/Farm",
+    "url": "https://infomoney.com.br/mercados/azzas-mais-proxima-de-vender-a-farm-azza3-salta-na-b3-com-novas-propostas-no-radar"
+   },
+   {
+    "titulo": "Finance News — destaques de quinta",
+    "url": "https://financenews.com.br/2026/10/mercados-nesta-quinta-noticia-da-vale-petrobras-jsl-minerva-jcp-do-bradesco-e-outros-destaques/"
+   },
+   {
+    "titulo": "TheStreet — Stock market today",
+    "url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-oct-01-2026"
+   },
+   {
+    "titulo": "Yahoo Finance — live 01/10",
+    "url": "https://finance.yahoo.com/markets/live/stock-market-today-thursday-oct-1-dow-sp-500-nasdaq-080602402.html"
+   },
+   {
+    "titulo": "Yahoo Finance — Accenture",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/acn-stock-jumps-accenture-posts-114431202.html"
+   },
+   {
+    "titulo": "Schwab — market update",
+    "url": "https://www.schwab.com/learn/story/stock-market-update-open"
+   },
+   {
+    "titulo": "Trading Economics — Brent",
+    "url": "https://tradingeconomics.com/commodity/brent-crude-oil"
+   },
+   {
+    "titulo": "ISM — PMI de setembro",
+    "url": "https://www.prnewswire.com/news-releases/manufacturing-pmi-at-54-5-september-2026-ism-manufacturing-pmi-report-302894520.html"
+   },
+   {
+    "titulo": "Monitor do Mercado — WLM JCP",
+    "url": "https://monitordomercado.com.br/noticias/empresas-e-acoes/428022-wlm-anuncia-r-10-milhoes-em-juros-sobre-capital-proprio-veja-valores-e-datas"
+   },
+   {
+    "titulo": "Panabee — Corteva/Vylor",
+    "url": "https://www.panabee.com/news/corteva-finalizes-vylor-separation-1-1-distribution-set-for-october-1"
+   },
+   {
+    "titulo": "Money Times — calendário de outubro",
+    "url": "https://www.moneytimes.com.br/26-empresas-pagam-dividendos-e-jcp-em-outubro-saiba-quais-e-o-calendario-completo-ceci/"
+   }
+  ],
+  "mercado": [
+   {
+    "nome": "Ibovespa",
+    "nota": "11h42; perto da estabilidade",
+    "valor": "~186.200",
+    "var": "-0,1%"
+   },
+   {
+    "nome": "Dólar",
+    "nota": "11h42",
+    "valor": "R$ 5,20",
+    "var": "+0,4%"
+   },
+   {
+    "nome": "S&P 500",
+    "nota": "Intradia; Treasury 10a em 5,32%, máxima desde 2002",
+    "valor": "7.640",
+    "var": "-0,2%"
+   },
+   {
+    "nome": "Nasdaq",
+    "nota": "Intradia",
+    "valor": "26.857",
+    "var": "0,0%"
+   },
+   {
+    "nome": "Brent",
+    "nota": "China suspende exportação de combustíveis",
+    "valor": "US$ 101,14",
+    "var": "+3,2%"
+   },
+   {
+    "nome": "WTI",
+    "valor": "US$ 92,28",
+    "var": "+2,1%"
+   }
+  ],
+  "proventos": [
+   {
+    "dataCom": "13/10",
+    "dataEx": "14/10",
+    "empresa": "Bradesco",
+    "mercado": "BR",
+    "obs": "ON (BBDC3): R$ 0,3424 bruto. Total R$ 3,8 bi.",
+    "pagamento": "até 30/04/27",
+    "status": "Anunciado",
+    "ticker": "BBDC4",
+    "tipo": "JCP",
+    "valor": "R$ 0,3766"
+   },
+   {
+    "dataCom": "09/10",
+    "dataEx": "—",
+    "empresa": "WLM",
+    "mercado": "BR",
+    "obs": "ON: R$ 0,2604 bruto. Total R$ 10 mi; isentos comprovam até 05/10.",
+    "pagamento": "05/11",
+    "status": "Anunciado",
+    "ticker": "WLMM4",
+    "tipo": "JCP",
+    "valor": "R$ 0,2865"
+   },
+   {
+    "empresa": "Itaú Unibanco",
+    "mercado": "BR",
+    "obs": "JCP mensal, data com 31/08.",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje",
+    "ticker": "ITUB4",
+    "tipo": "JCP",
+    "valor": "R$ 0,0150"
+   },
+   {
+    "empresa": "Bradesco (mensal)",
+    "mercado": "BR",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje",
+    "ticker": "BBDC4",
+    "tipo": "JCP",
+    "valor": "R$ 0,017"
+   },
+   {
+    "empresa": "Itaúsa",
+    "mercado": "BR",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje",
+    "ticker": "ITSA4",
+    "tipo": "JCP",
+    "valor": "R$ 0,018"
+   },
+   {
+    "empresa": "Banestes",
+    "mercado": "BR",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje",
+    "ticker": "BEES3",
+    "tipo": "JCP",
+    "valor": "R$ 0,029"
+   },
+   {
+    "empresa": "Log Commercial",
+    "mercado": "BR",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje",
+    "ticker": "LOGG3",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,159"
+   },
+   {
+    "empresa": "Allos",
+    "mercado": "BR",
+    "pagamento": "02/10",
+    "status": "Agenda",
+    "ticker": "ALOS3",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,292"
+   },
+   {
+    "empresa": "JSL",
+    "mercado": "BR",
+    "pagamento": "02/10",
+    "status": "Agenda",
+    "ticker": "JSLG3",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,740"
+   },
+   {
+    "empresa": "Alupar",
+    "mercado": "BR",
+    "pagamento": "02/10",
+    "status": "Agenda",
+    "ticker": "ALUP11",
+    "tipo": "Dividendos",
+    "valor": "R$ 0,210"
+   },
+   {
+    "empresa": "Ambev",
+    "mercado": "BR",
+    "pagamento": "06/10",
+    "status": "Agenda",
+    "ticker": "ABEV3",
+    "tipo": "JCP",
+    "valor": "R$ 0,119"
+   },
+   {
+    "dataCom": "24/09",
+    "dataEx": "25/09",
+    "empresa": "Rede D'Or",
+    "mercado": "BR",
+    "pagamento": "06/10",
+    "status": "Agenda",
+    "ticker": "RDOR3",
+    "tipo": "JCP",
+    "valor": "R$ 0,1841"
+   },
+   {
+    "empresa": "B3",
+    "mercado": "BR",
+    "pagamento": "07/10",
+    "status": "Agenda",
+    "ticker": "B3SA3",
+    "tipo": "JCP",
+    "valor": "R$ 0,377"
+   },
+   {
+    "empresa": "Totvs",
+    "mercado": "BR",
+    "pagamento": "08/10",
+    "status": "Agenda",
+    "ticker": "TOTS3",
+    "tipo": "JCP",
+    "valor": "R$ 0,150"
+   },
+   {
+    "empresa": "Lojas Renner",
+    "mercado": "BR",
+    "pagamento": "14/10",
+    "status": "Agenda",
+    "ticker": "LREN3",
+    "tipo": "JCP",
+    "valor": "R$ 0,241"
+   },
+   {
+    "dataCom": "13/10",
+    "empresa": "Danaos",
+    "mercado": "US",
+    "obs": "US$ 1,00 trimestral + US$ 5,00 extraordinário.",
+    "pagamento": "22/10",
+    "status": "Anunciado",
+    "ticker": "DAC",
+    "tipo": "Dividendo especial",
+    "valor": "US$ 6,00"
+   },
+   {
+    "dataCom": "15/10",
+    "empresa": "American Financial Group",
+    "mercado": "US",
+    "pagamento": "23/10",
+    "status": "Anunciado",
+    "ticker": "AFG",
+    "tipo": "Dividendos",
+    "valor": "US$ 0,97"
+   },
+   {
+    "dataCom": "22/10",
+    "empresa": "LTC Properties",
+    "mercado": "US",
+    "obs": "Também 20/11→30/11 e 23/12→31/12.",
+    "pagamento": "30/10",
+    "status": "Anunciado",
+    "ticker": "LTC",
+    "tipo": "Dividendos",
+    "valor": "US$ 0,19"
+   },
+   {
+    "empresa": "Nike",
+    "mercado": "US",
+    "pagamento": "01/10",
+    "status": "Pagamento hoje",
+    "ticker": "NKE",
+    "tipo": "Dividendos",
+    "valor": "—"
+   }
+  ],
+  "resumo": "Ibovespa anda de lado perto de 186 mil pontos e o dólar sobe a R$ 5,20, com o mercado à espera da Datafolha e do debate de hoje antes do 1º turno de domingo; o PMI industrial caiu a 44,8, mínima em 3,5 anos. Azzas dispara após receber 15 propostas pela Farm Rio (R$ 3,5–4 bi) e Petrobras sobe com produção recorde e Brent acima de US$ 100. Nos EUA, o Treasury de 10 anos bate 5,3%, maior nível desde 2002, segurando os índices, enquanto Accenture salta ~20% com resultado e bookings recorde. Corteva concluiu o spin-off da Vylor — a queda na tela de CTVA é ajuste, atenção às posições.",
+  "rotulo": "Meio do dia",
+  "ts": "2026-10-01T11:50:00-03:00",
+  "id": "2026-10-01_1150"
+ },
+ {
   "dia": "2026-10-01",
   "ts": "2026-10-01T11:30:00-03:00",
   "rotulo": "Manhã",
