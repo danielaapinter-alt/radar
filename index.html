@@ -13,9 +13,9 @@
   --accent:#1F4FA8; --accent-soft:#E3EAF7;
   --br:#0C7A4E; --br-soft:#E0F1E8; --us:#1F4FA8; --us-soft:#E3EAF7;
   --up:#0C7A4E; --down:#B3261E; --warn:#A35F00; --warn-soft:#FBEBD3;
-  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
-  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --f-display:"Archivo","Arial Narrow","Segoe UI",system-ui,sans-serif;
+  --f-body:"Public Sans","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",Consolas,"Cascadia Mono","SFMono-Regular",Menlo,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F1513; --surface:#17201D; --ink:#E4ECE9; --muted:#93A39E; --line:#2A3632;
@@ -103,6 +103,15 @@ td.dt{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:no
 .pill.hoje{background:var(--warn-soft);color:var(--warn)}
 .pill.novo{background:var(--ink);color:var(--bg)}
 .pauta{font-size:13px;color:var(--muted);max-width:52ch}
+table.prov{table-layout:fixed;min-width:860px}
+table.prov td{padding:9px 12px;vertical-align:top}
+table.prov .emp{font-weight:600;line-height:1.3}
+table.prov .obs{font-size:12px;color:var(--muted);line-height:1.35;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+table.prov td.val{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:normal;overflow-wrap:anywhere}
+table.prov tr:hover td{background:var(--accent-soft)}
+table.prov td.num,table.prov td.dt{white-space:normal;overflow-wrap:anywhere}
+.subhead{display:flex;align-items:baseline;gap:10px;margin:4px 0 -2px;font-family:var(--f-display);font-stretch:85%;font-weight:700;font-size:16px;text-transform:uppercase}
+.subhead small{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--muted);text-transform:none}
 .agenda{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px}
 .agenda .row{display:grid;grid-template-columns:72px 44px minmax(0,1fr);gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:baseline}
 .agenda .row:last-child{border-bottom:0}
@@ -147,7 +156,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const state = { eds: [], day: null, edId: null, lane: "tudo", q: "", followLatest: true };
-  try { const l = localStorage.getItem("radar.lane"); if (l) state.lane = l; } catch(e){}
+  try { const l = localStorage.getItem("radar.lane"); if (l) state.lane = (l === "proventos" ? "prov-br" : l); } catch(e){}
 
   const fmtDay = d => { try { return new Date(d+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"}); } catch(e){ return d; } };
   const fmtTime = iso => { try { return new Date(iso).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}); } catch(e){ return ""; } };
@@ -175,7 +184,9 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
 
     const br = (ed.brasil||[]).filter(match), us = (ed.eua||[]).filter(match);
     const pv = (ed.proventos||[]).filter(match), as = (ed.assembleias||[]).filter(match), ag = (ed.agenda||[]).filter(match);
-    const lanes = [["tudo","Tudo",null],["brasil","Brasil",br.length],["eua","EUA",us.length],["proventos","Proventos",pv.length],["assembleias","Assembleias",as.length],["agenda","Agenda",ag.length]];
+    const isUS = p => p.mercado === "US" || /^\s*US\$/.test(p.valor||"");
+    const pvBR = pv.filter(p => !isUS(p)), pvUS = pv.filter(isUS);
+    const lanes = [["tudo","Tudo",null],["brasil","Brasil",br.length],["eua","EUA",us.length],["prov-br","Proventos BR",pvBR.length],["prov-us","Proventos EUA",pvUS.length],["assembleias","Assembleias",as.length],["agenda","Agenda",ag.length]];
     const show = k => state.lane === "tudo" || state.lane === k;
 
     let h = `<div class="lead">
@@ -197,13 +208,19 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     if (show("brasil")) h += `<section class="lane"><h3>Brasil <small>${br.length} notícia(s)</small></h3>${newsCards(br,"br")}</section>`;
     if (show("eua")) h += `<section class="lane"><h3>EUA <small>${us.length} notícia(s)</small></h3>${newsCards(us,"us")}</section>`;
 
-    if (show("proventos")){
-      const pc = t => { const s=(t||"").toLowerCase(); return s.includes("jcp")?"jcp":(s.includes("espec")||s.includes("extra")?"esp":"div"); };
-      const st = s => s ? `<span class="pill ${/hoje/i.test(s)?"hoje":(/anunc|novo/i.test(s)?"novo":"")}">${esc(s)}</span>` : "";
-      h += `<section class="lane"><h3>Proventos <small>dividendos · JCP · rendimentos</small></h3>` + (pv.length ? `<div class="tablebox"><table>
-        <thead><tr><th>Mkt</th><th>Ticker</th><th>Empresa</th><th>Tipo</th><th>Valor/ação</th><th>Data com</th><th>Data ex</th><th>Pagamento</th><th>Status</th></tr></thead><tbody>
-        ${pv.map(p => `<tr><td><span class="tk ${p.mercado==="US"?"us":"br"}">${esc(p.mercado||"BR")}</span></td><td class="num"><strong>${esc(p.ticker)}</strong></td><td>${esc(p.empresa||"")}${p.obs?`<div class="pauta">${esc(p.obs)}</div>`:""}</td><td><span class="pill ${pc(p.tipo)}">${esc(p.tipo)}</span></td><td class="num">${esc(p.valor||"—")}</td><td class="dt">${esc(p.dataCom||"—")}</td><td class="dt">${esc(p.dataEx||"—")}</td><td class="dt">${esc(p.pagamento||"—")}</td><td>${st(p.status)}</td></tr>`).join("")}
-        </tbody></table></div>` : `<div class="empty">Nenhum provento ${state.q?"com esse filtro":"nesta edição"}.</div>`) + `</section>`;
+    if (show("prov-br") || show("prov-us")){
+      const pc = t => { const x=(t||"").toLowerCase(); return x.includes("jcp")?"jcp":(x.includes("espec")||x.includes("extra")?"esp":"div"); };
+      const st = x => x ? `<span class="pill ${/hoje/i.test(x)?"hoje":(/anunc|novo/i.test(x)?"novo":"")}">${esc(x)}</span>` : "";
+      const now = new Date(ed.ts || Date.now()), cm = now.getMonth()+1, cy = now.getFullYear();
+      const key = x => { const m = /(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/.exec(x||""); if (!m) return 9e9; let y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : (+m[2] < cm - 2 ? cy + 1 : cy); return y*10000 + (+m[2])*100 + (+m[1]); };
+      const sorted = arr => arr.slice().sort((a,b) => key(a.pagamento) - key(b.pagamento) || key(a.dataCom) - key(b.dataCom));
+      const table = arr => arr.length ? `<div class="tablebox"><table class="prov">
+        <colgroup><col style="width:90px"><col><col style="width:110px"><col style="width:130px"><col style="width:120px"><col style="width:80px"><col style="width:120px"><col style="width:125px"></colgroup>
+        <thead><tr><th>Ticker</th><th>Empresa</th><th>Tipo</th><th>Valor/ação</th><th>Data com</th><th>Data ex</th><th>Pagamento</th><th>Status</th></tr></thead><tbody>
+        ${sorted(arr).map(p => `<tr><td class="num"><strong>${esc(p.ticker)}</strong></td><td><div class="emp">${esc(p.empresa||"")}</div>${p.obs?`<div class="obs" title="${esc(p.obs)}">${esc(p.obs)}</div>`:""}</td><td><span class="pill ${pc(p.tipo)}">${esc(p.tipo)}</span></td><td class="val">${esc(p.valor||"—")}</td><td class="dt">${esc(p.dataCom||"—")}</td><td class="dt">${esc(p.dataEx||"—")}</td><td class="dt">${esc(p.pagamento||"—")}</td><td>${st(p.status)}</td></tr>`).join("")}
+        </tbody></table></div>` : `<div class="empty">Nenhum provento ${state.q?"com esse filtro":"nesta edição"}.</div>`;
+      if (show("prov-br")) h += `<section class="lane"><h3>Proventos Brasil <small>R$ · dividendos · JCP · rendimentos · ${pvBR.length} item(ns), por data de pagamento</small></h3>${table(pvBR)}</section>`;
+      if (show("prov-us")) h += `<section class="lane"><h3>Proventos EUA <small>US$ · dividends · ${pvUS.length} item(ns), por data de pagamento</small></h3>${table(pvUS)}</section>`;
     }
     if (show("assembleias")){
       h += `<section class="lane"><h3>Assembleias <small>AGO · AGE · AGOE · proxy</small></h3>` + (as.length ? `<div class="tablebox"><table>
