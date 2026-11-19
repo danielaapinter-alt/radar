@@ -109,6 +109,15 @@ table.prov .emp{font-weight:600;line-height:1.3}
 table.prov .obs{font-size:12px;color:var(--muted);line-height:1.35;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 table.prov td.val{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:normal;overflow-wrap:anywhere}
 table.prov tr:hover td{background:var(--accent-soft)}
+table.prov tr.is-new td{background:var(--warn-soft)}
+table.prov tr.is-new td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
+.newtag{display:inline-block;font-family:var(--f-mono);font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--surface);background:var(--warn);border-radius:3px;padding:1px 6px;margin-top:4px}
+.newsince{display:block;font-family:var(--f-mono);font-size:11px;color:var(--warn);margin-top:3px}
+.seg button .nw{font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--warn);margin-left:6px}
+.seg button[aria-pressed="true"] .nw{color:var(--surface)}
+.provbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.provbar label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--ink);font-weight:600}
+.provbar .sw{display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--warn-soft);box-shadow:inset 3px 0 0 var(--warn)}
 table.prov td.num,table.prov td.dt{white-space:normal;overflow-wrap:anywhere}
 .subhead{display:flex;align-items:baseline;gap:10px;margin:4px 0 -2px;font-family:var(--f-display);font-stretch:85%;font-weight:700;font-size:16px;text-transform:uppercase}
 .subhead small{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--muted);text-transform:none}
@@ -155,7 +164,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
 (function(){
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const state = { eds: [], day: null, edId: null, lane: "tudo", q: "", followLatest: true };
+  const state = { eds: [], day: null, edId: null, lane: "tudo", q: "", followLatest: true, soNovos: false };
   try { const l = localStorage.getItem("radar.lane"); if (l) state.lane = (l === "proventos" ? "prov-br" : l); } catch(e){}
 
   const fmtDay = d => { try { return new Date(d+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"}); } catch(e){ return d; } };
@@ -185,8 +194,19 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     const br = (ed.brasil||[]).filter(match), us = (ed.eua||[]).filter(match);
     const pv = (ed.proventos||[]).filter(match), as = (ed.assembleias||[]).filter(match), ag = (ed.agenda||[]).filter(match);
     const isUS = p => p.mercado === "US" || /^\s*US\$/.test(p.valor||"");
+    // "Novo" = provento que não estava na última edição do dia anterior
+    const pClass = t => { const x=(t||"").toLowerCase(); return x.includes("jcp")?"jcp":(x.includes("espec")||x.includes("extra"))?"esp":x.includes("rend")?"rend":"div"; };
+    const ddmm = x => { const m = /(\d{1,2})\/(\d{1,2})/.exec(x||""); return m ? m[1].padStart(2,"0")+"/"+m[2].padStart(2,"0") : ""; };
+    const pKey = p => (String(p.ticker||"").toUpperCase().trim().split(/[\s\/,]+/)[0]) + "|" + pClass(p.tipo) + "|" + (ddmm(p.dataCom) || ddmm(p.pagamento));
+    const prevDayEd = state.eds.filter(e => e.dia < ed.dia).sort((a,b) => a.ts < b.ts ? 1 : -1)[0];
+    const prevKeys = prevDayEd ? new Set((prevDayEd.proventos||[]).map(pKey)) : null;
+    const firstSeen = {};
+    state.eds.filter(e => e.dia === ed.dia && e.ts <= ed.ts).sort((a,b) => a.ts < b.ts ? -1 : 1)
+      .forEach(e => (e.proventos||[]).forEach(p => { const k = pKey(p); if (!(k in firstSeen)) firstSeen[k] = e.ts; }));
+    const isNew = p => !!prevKeys && !prevKeys.has(pKey(p));
     const pvBR = pv.filter(p => !isUS(p)), pvUS = pv.filter(isUS);
-    const lanes = [["tudo","Tudo",null],["brasil","Brasil",br.length],["eua","EUA",us.length],["prov-br","Proventos BR",pvBR.length],["prov-us","Proventos EUA",pvUS.length],["assembleias","Assembleias",as.length],["agenda","Agenda",ag.length]];
+    const nBR = pvBR.filter(isNew).length, nUS = pvUS.filter(isNew).length;
+    const lanes = [["tudo","Tudo",null],["brasil","Brasil",br.length],["eua","EUA",us.length],["prov-br","Proventos BR",pvBR.length,nBR],["prov-us","Proventos EUA",pvUS.length,nUS],["assembleias","Assembleias",as.length],["agenda","Agenda",ag.length]];
     const show = k => state.lane === "tudo" || state.lane === k;
 
     let h = `<div class="lead">
@@ -195,7 +215,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
       <div class="tape">${(ed.mercado||[]).map(m => `<div class="q"><span class="n">${esc(m.nome)}</span><span class="v">${esc(m.valor)}</span><span class="d ${cls(m.var)}">${esc(m.var||"")}</span>${m.nota?`<span class="note">${esc(m.nota)}</span>`:""}</div>`).join("")}</div>
     </div>
     <div class="controls">
-      <div class="seg" role="group" aria-label="Seções">${lanes.map(([k,t,c]) => `<button data-lane="${k}" aria-pressed="${state.lane===k}">${t}${c!=null?`<span class="ct">${c}</span>`:""}</button>`).join("")}</div>
+      <div class="seg" role="group" aria-label="Seções">${lanes.map(([k,t,c,n]) => `<button data-lane="${k}" aria-pressed="${state.lane===k}">${t}${c!=null?`<span class="ct">${c}</span>`:""}${n?`<span class="nw">+${n} novo${n>1?"s":""}</span>`:""}</button>`).join("")}</div>
       <label class="search"><input id="q" type="search" placeholder="Filtrar por ticker ou empresa (ex.: PETR4, Bradesco)" value="${esc(state.q)}" aria-label="Filtrar"></label>
     </div>`;
 
@@ -213,14 +233,15 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
       const st = x => x ? `<span class="pill ${/hoje/i.test(x)?"hoje":(/anunc|novo/i.test(x)?"novo":"")}">${esc(x)}</span>` : "";
       const now = new Date(ed.ts || Date.now()), cm = now.getMonth()+1, cy = now.getFullYear();
       const key = x => { const m = /(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/.exec(x||""); if (!m) return 9e9; let y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : (+m[2] < cm - 2 ? cy + 1 : cy); return y*10000 + (+m[2])*100 + (+m[1]); };
-      const sorted = arr => arr.slice().sort((a,b) => key(a.pagamento) - key(b.pagamento) || key(a.dataCom) - key(b.dataCom));
-      const table = arr => arr.length ? `<div class="tablebox"><table class="prov">
+      const sorted = arr => arr.slice().sort((a,b) => (isNew(b) - isNew(a)) || key(a.pagamento) - key(b.pagamento) || key(a.dataCom) - key(b.dataCom));
+      const table = all => { const arr = state.soNovos ? all.filter(isNew) : all; return arr.length ? `<div class="tablebox"><table class="prov">
         <colgroup><col style="width:90px"><col><col style="width:110px"><col style="width:130px"><col style="width:120px"><col style="width:80px"><col style="width:120px"><col style="width:125px"></colgroup>
         <thead><tr><th>Ticker</th><th>Empresa</th><th>Tipo</th><th>Valor/ação</th><th>Data com</th><th>Data ex</th><th>Pagamento</th><th>Status</th></tr></thead><tbody>
-        ${sorted(arr).map(p => `<tr><td class="num"><strong>${esc(p.ticker)}</strong></td><td><div class="emp">${esc(p.empresa||"")}</div>${p.obs?`<div class="obs" title="${esc(p.obs)}">${esc(p.obs)}</div>`:""}</td><td><span class="pill ${pc(p.tipo)}">${esc(p.tipo)}</span></td><td class="val">${esc(p.valor||"—")}</td><td class="dt">${esc(p.dataCom||"—")}</td><td class="dt">${esc(p.dataEx||"—")}</td><td class="dt">${esc(p.pagamento||"—")}</td><td>${st(p.status)}</td></tr>`).join("")}
-        </tbody></table></div>` : `<div class="empty">Nenhum provento ${state.q?"com esse filtro":"nesta edição"}.</div>`;
-      if (show("prov-br")) h += `<section class="lane"><h3>Proventos Brasil <small>R$ · dividendos · JCP · rendimentos · ${pvBR.length} item(ns), por data de pagamento</small></h3>${table(pvBR)}</section>`;
-      if (show("prov-us")) h += `<section class="lane"><h3>Proventos EUA <small>US$ · dividends · ${pvUS.length} item(ns), por data de pagamento</small></h3>${table(pvUS)}</section>`;
+        ${sorted(arr).map(p => { const nv = isNew(p); return `<tr class="${nv?"is-new":""}"><td class="num"><strong>${esc(p.ticker)}</strong>${nv?`<br><span class="newtag">NOVO</span>`:""}</td><td><div class="emp">${esc(p.empresa||"")}</div>${p.obs?`<div class="obs" title="${esc(p.obs)}">${esc(p.obs)}</div>`:""}</td><td><span class="pill ${pc(p.tipo)}">${esc(p.tipo)}</span></td><td class="val">${esc(p.valor||"—")}</td><td class="dt">${esc(p.dataCom||"—")}</td><td class="dt">${esc(p.dataEx||"—")}</td><td class="dt">${esc(p.pagamento||"—")}</td><td>${st(p.status)}${nv && firstSeen[pKey(p)] ? `<span class="newsince">novo desde ${esc(fmtTime(firstSeen[pKey(p)]))}</span>` : ""}</td></tr>`; }).join("")}
+        </tbody></table></div>` : `<div class="empty">${state.soNovos ? "Nenhum provento novo hoje" + (state.q?" com esse filtro":"") + "." : "Nenhum provento " + (state.q?"com esse filtro":"nesta edição") + "."}</div>`; };
+      const bar = n => `<div class="provbar"><label><input type="checkbox" id="soNovos" ${state.soNovos?"checked":""}> Mostrar só os novos</label><span><span class="sw"></span> ${prevKeys ? `${n} novo${n===1?"":"s"} hoje — não estavam na última edição de ${esc(fmtDay(prevDayEd.dia))}` : "Sem edição do dia anterior para comparar"}</span></div>`;
+      if (show("prov-br")) h += `<section class="lane"><h3>Proventos Brasil <small>R$ · dividendos · JCP · rendimentos · ${pvBR.length} item(ns); novos no topo, depois por data de pagamento</small></h3>${bar(nBR)}${table(pvBR)}</section>`;
+      if (show("prov-us")) h += `<section class="lane"><h3>Proventos EUA <small>US$ · dividends · ${pvUS.length} item(ns); novos no topo, depois por data de pagamento</small></h3>${bar(nUS)}${table(pvUS)}</section>`;
     }
     if (show("assembleias")){
       h += `<section class="lane"><h3>Assembleias <small>AGO · AGE · AGOE · proxy</small></h3>` + (as.length ? `<div class="tablebox"><table>
@@ -245,6 +266,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
     const ln = ev.target.closest("[data-lane]");
     if (ln){ state.lane = ln.dataset.lane; try{ localStorage.setItem("radar.lane", state.lane);}catch(e){} render(); return; }
   });
+  document.addEventListener("change", ev => { if (ev.target.id === "soNovos"){ state.soNovos = ev.target.checked; render(); } });
   document.addEventListener("input", ev => { if (ev.target.id === "q"){ state.q = ev.target.value.trim().toLowerCase(); render(); } });
   $("#prevDay").addEventListener("click", () => { const ds = days(); const i = ds.indexOf(state.day); if (i < ds.length-1){ state.day = ds[i+1]; state.edId = null; state.followLatest = false; render(); } });
   $("#nextDay").addEventListener("click", () => { const ds = days(); const i = ds.indexOf(state.day); if (i > 0){ state.day = ds[i-1]; state.edId = null; state.followLatest = (i-1 === 0); render(); } });
