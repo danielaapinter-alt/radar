@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# Proventos e Radar - Outlook do Safra (Radar Corporativo)  - versao 3
+# Proventos e Radar - Outlook do Safra (Radar Corporativo)  - versao 4
+# Le a caixa compartilhada mesa.aluguel (e a sua) e pode enviar em nome dela.
 # --auto : envia os proventos do dia aos clientes (Agendador, 8h45)
 # --rede : le os e-mails "Radar Corporativo - edicao" e regrava Radar.html nesta pasta (a cada 15 min)
 #
@@ -47,6 +48,8 @@ PADRAO = {
     "bcc": [],
 }
 CHAVES = ("to", "cc", "bcc")
+ARQ_CONFIG = os.path.join(PASTA, "proventos_config.json")
+CONFIG_PADRAO = {"caixa": "mesa.aluguel@safra.com.br", "enviar_em_nome": True}
 ASSUNTO = re.compile(r"^\s*(RES:|ENC:|FW:|RE:)?\s*Proventos (\d{2})/(\d{2})/(\d{4})\s*$", re.I)
 EMAIL_OK = re.compile(r"^[^\s@;,]+@[^\s@;,]+\.[^\s@;,]+$")
 
@@ -99,12 +102,60 @@ def outlook():
     return win32com.client.Dispatch("Outlook.Application")
 
 
-def ultimo_email_proventos(app):
-    ns = app.GetNamespace("MAPI")
-    melhor = None
-    for pasta_id in (6, 23):  # 6 = Caixa de Entrada, 23 = Lixo Eletronico
+def carregar_config():
+    c = ler_json(ARQ_CONFIG, {})
+    return {"caixa": c.get("caixa", CONFIG_PADRAO["caixa"]),
+            "enviar_em_nome": bool(c.get("enviar_em_nome", CONFIG_PADRAO["enviar_em_nome"]))}
+
+
+def pastas_caixa_mesa(ns, caixa):
+    """Caixa de Entrada e Lixo Eletronico da caixa compartilhada (ex.: mesa.aluguel)."""
+    if not caixa:
+        return []
+    # 1) caixa adicionada como conta/arquivo de dados no Outlook
+    alvo = caixa.lower()
+    for i in range(1, ns.Folders.Count + 1):
         try:
-            itens = ns.GetDefaultFolder(pasta_id).Items
+            raiz = ns.Folders.Item(i)
+            if alvo in (raiz.Name or "").lower() or alvo.split("@")[0] in (raiz.Name or "").lower():
+                st = raiz.Store
+                return [st.GetDefaultFolder(6)] + [p for p in [_tenta(lambda: st.GetDefaultFolder(23))] if p]
+        except Exception:
+            continue
+    # 2) caixa compartilhada aberta por permissao
+    try:
+        rec = ns.CreateRecipient(caixa)
+        rec.Resolve()
+        pastas = [ns.GetSharedDefaultFolder(rec, 6)]
+        j = _tenta(lambda: ns.GetSharedDefaultFolder(rec, 23))
+        return pastas + ([j] if j else [])
+    except Exception:
+        return []
+
+
+def _tenta(f):
+    try:
+        return f()
+    except Exception:
+        return None
+
+
+def pastas_busca(app):
+    """Pastas onde procurar: caixa da mesa (se configurada) e a sua propria caixa."""
+    ns = app.GetNamespace("MAPI")
+    pastas = pastas_caixa_mesa(ns, carregar_config()["caixa"])
+    for pid in (6, 23):  # 6 = Caixa de Entrada, 23 = Lixo Eletronico
+        p = _tenta(lambda: ns.GetDefaultFolder(pid))
+        if p:
+            pastas.append(p)
+    return pastas
+
+
+def ultimo_email_proventos(app):
+    melhor = None
+    for pasta in pastas_busca(app):
+        try:
+            itens = pasta.Items
             itens.Sort("[ReceivedTime]", True)
         except Exception:
             continue
@@ -140,15 +191,60 @@ def montar_email(app, origem, dest):
     m.BCC = "; ".join(dest["bcc"])
     m.Subject = re.sub(r"^\s*(RES:|ENC:|FW:|RE:)\s*", "", origem.Subject or "", flags=re.I).strip()
     m.HTMLBody = origem.HTMLBody
+    cfg = carregar_config()
+    if cfg["enviar_em_nome"] and cfg["caixa"]:
+        m.SentOnBehalfOfName = cfg["caixa"]
     return m
+
+
+def trava(nome, validade_min):
+    """Trava simples na pasta da rede, para dois PCs nao fazerem a mesma coisa ao mesmo tempo."""
+    caminho = os.path.join(PASTA, nome)
+    try:
+        if os.path.exists(caminho):
+            idade = dt.datetime.now().timestamp() - os.path.getmtime(caminho)
+            if idade < validade_min * 60:
+                return None
+            os.remove(caminho)
+        fd = os.open(caminho, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.write(fd, os.environ.get("COMPUTERNAME", "?").encode())
+        os.close(fd)
+        return caminho
+    except Exception:
+        return None
+
+
+def soltar(caminho):
+    try:
+        if caminho:
+            os.remove(caminho)
+    except Exception:
+        pass
 
 
 # ---------------- modo automatico (Agendador do Windows) ----------------
 def rodar_auto():
+    hoje = dt.date.today().isoformat()
+    for f in os.listdir(PASTA):  # limpa travas de dias anteriores
+        if f.startswith("proventos_envio_") and f.endswith(".lock") and hoje not in f:
+            soltar(os.path.join(PASTA, f))
+    lk = trava(f"proventos_envio_{hoje}.lock", 24 * 60)
+    if not lk:
+        log("AUTO: outro computador ja esta enviando ou ja enviou hoje, nada a fazer.")
+        return
+    ok = False
+    try:
+        ok = _rodar_auto()
+    finally:
+        if not ok:
+            soltar(lk)
+
+
+def _rodar_auto():
     try:
         if ja_enviado_hoje():
             log("AUTO: ja foi enviado hoje, nada a fazer.")
-            return
+            return True
         dest = carregar_dest()
         if not any(dest[k] for k in CHAVES):
             log("AUTO: lista de destinatarios vazia, nao enviei.")
@@ -165,6 +261,7 @@ def rodar_auto():
         marcar_enviado(origem, "automatico")
         n = sum(len(dest[k]) for k in CHAVES)
         log(f"AUTO: enviado '{origem.Subject}' para {n} destinatario(s).")
+        return True
     except Exception as e:
         log(f"AUTO: ERRO {e!r}")
 
@@ -186,11 +283,10 @@ def log_radar(msg):
 
 
 def emails_radar(app):
-    ns = app.GetNamespace("MAPI")
     achados = []
-    for pasta_id in (6, 23):
+    for pasta in pastas_busca(app):
         try:
-            itens = ns.GetDefaultFolder(pasta_id).Items
+            itens = pasta.Items
             itens.Sort("[ReceivedTime]", True)
         except Exception:
             continue
@@ -235,6 +331,16 @@ def gravar_radar(template, eds):
 
 def atualizar_radar(apagar_emails=True):
     """Junta as edicoes dos e-mails 'Radar Corporativo - edicao' no historico e regrava Radar.html."""
+    lk = trava("radar.lock", 10)
+    if not lk:
+        return 0
+    try:
+        return _atualizar_radar(apagar_emails)
+    finally:
+        soltar(lk)
+
+
+def _atualizar_radar(apagar_emails):
     app = outlook()
     itens = emails_radar(app)
     if not itens:
@@ -296,7 +402,7 @@ def _schtasks(args):
 def agendar():
     acao = f'"{pythonw()}" "{ARQ_PROG}" --auto'
     _schtasks(["/Create", "/F", "/TN", NOME_TAREFA, "/SC", "WEEKLY",
-               "/D", "MON,TUE,WED,THU,FRI", "/ST", HORA_TAREFA, "/TR", acao])
+               "/D", "MON,TUE,WED,THU,FRI", "/ST", HORA_TAREFA, "/RI", "15", "/DU", "01:15", "/TR", acao])
 
 
 def desagendar():
@@ -343,6 +449,12 @@ def rodar_janela():
             self.lbl_origem = ttk.Label(topo, text="Procurando no Outlook…", font=("Segoe UI", 10))
             self.lbl_origem.pack(anchor="w")
             ttk.Button(topo, text="Procurar de novo", command=self.atualizar_origem).pack(anchor="w", pady=(4, 0))
+            self.cfg = carregar_config()
+            self.var_nome = tk.BooleanVar(value=self.cfg["enviar_em_nome"])
+            ttk.Checkbutton(topo, text=f"Enviar em nome de {self.cfg['caixa']} (caixa da mesa)",
+                            variable=self.var_nome, command=self.salvar_cfg).pack(anchor="w", pady=(6, 0))
+            self.lbl_caixa = ttk.Label(topo, text="", font=("Segoe UI", 9), foreground="#5B6B66")
+            self.lbl_caixa.pack(anchor="w")
 
             self.listas = {}
             for chave, titulo in (("to", "Para"), ("cc", "Cópia"),
@@ -390,6 +502,10 @@ def rodar_janela():
             self.lbl_status = ttk.Label(self, text="", foreground="#0C7A4E", font=("Segoe UI", 9))
             self.lbl_status.pack(anchor="w", padx=12, pady=(0, 10))
 
+        def salvar_cfg(self):
+            self.cfg["enviar_em_nome"] = bool(self.var_nome.get())
+            gravar_json(ARQ_CONFIG, self.cfg)
+
         def desenhar_listas(self):
             for k, (lb, _) in self.listas.items():
                 lb.delete(0, "end")
@@ -421,7 +537,11 @@ def rodar_janela():
 
         def atualizar_origem(self):
             try:
-                self.origem = ultimo_email_proventos(outlook())
+                app = outlook()
+                ok = bool(pastas_caixa_mesa(app.GetNamespace("MAPI"), self.cfg["caixa"]))
+                self.lbl_caixa.config(text=(f"Lendo a caixa {self.cfg['caixa']} e a sua." if ok else
+                                            f"Não achei a caixa {self.cfg['caixa']} no seu Outlook; lendo só a sua."))
+                self.origem = ultimo_email_proventos(app)
                 if self.origem is None:
                     self.lbl_origem.config(text="Nenhum e-mail \"Proventos DD/MM/AAAA\" encontrado.")
                 else:
@@ -520,7 +640,8 @@ def rodar_janela():
                 agendar()
                 messagebox.showinfo("Envio automático",
                                     "Ativado. De segunda a sexta, às 8h45, o e-mail de proventos do dia "
-                                    "sai sozinho do seu Outlook para a lista cadastrada.\n\n"
+                                    "sai sozinho para a lista cadastrada. Se o e-mail das 8h30 atrasar, "
+                                    "o programa tenta de novo a cada 15 min até as 10h.\n\n"
                                     "O computador precisa estar ligado e com você logada.")
             except Exception as e:
                 messagebox.showerror("Não consegui agendar", str(e))
