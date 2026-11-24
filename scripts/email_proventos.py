@@ -228,8 +228,12 @@ def main():
     if hoje:
         body.append(section_title("PAGAM HOJE", f"{len(hoje)} provento(s)"))
         body.append(mini_list(hoje))
-    body.append(section_title("BRASIL · R$", f"{len(br)} vigentes, por data de pagamento"))
-    body.append(market_table(br))
+    br_jcp = [p for p in br if p_class(p.get("tipo")) == "jcp"]
+    br_div = [p for p in br if p_class(p.get("tipo")) != "jcp"]
+    body.append(section_title("BRASIL · JCP · R$", f"{len(br_jcp)} vigentes, por data de pagamento"))
+    body.append(market_table(br_jcp))
+    body.append(section_title("BRASIL · DIVIDENDOS E DEMAIS · R$", f"{len(br_div)} vigentes, por data de pagamento"))
+    body.append(market_table(br_div))
     body.append(section_title("EUA · US$", f"{len(us)} vigentes, por data de pagamento"))
     body.append(market_table(us))
     body.append(
@@ -249,7 +253,9 @@ def main():
     body_txt = (f"RADAR CORPORATIVO - Proventos vigentes - {dia_txt}\n"
                 f"Novos hoje: {n_novos} | Pagam hoje: {len(hoje)} | Vigentes: {len(br)} BR, {len(us)} EUA\n\n"
                 + (f"NOVOS HOJE\n{txt_rows(novos)}\n\n" if novos else "")
-                + f"BRASIL (R$)\n{txt_rows(br)}\n\nEUA (US$)\n{txt_rows(us)}\n\n{cmp_txt}\n")
+                + f"BRASIL - JCP (R$)\n{txt_rows([p for p in br if p_class(p.get('tipo')) == 'jcp'])}\n\n"
+                + f"BRASIL - DIVIDENDOS E DEMAIS (R$)\n{txt_rows([p for p in br if p_class(p.get('tipo')) != 'jcp'])}\n\n"
+                + f"EUA (US$)\n{txt_rows(us)}\n\n{cmp_txt}\n")
 
     os.makedirs(OUT, exist_ok=True)
     open(os.path.join(OUT, "email_proventos.html"), "w", encoding="utf-8").write(body_html)
