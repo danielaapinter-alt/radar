@@ -92,7 +92,7 @@ def main():
         rows = []
         for p in ordered(arr):
             nv = is_new(p)
-            obs = short(p.get("obs"))
+            obs = short(p.get("obs"), 120) if nv else ""  # observação só nos novos, para o e-mail ficar leve
             hoje = "hoje" in str(p.get("status") or "").lower()
             rows.append(
                 f'<tr{" class=n" if nv else ""}>'
