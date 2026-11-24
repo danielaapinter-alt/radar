@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-# Proventos - envio pelo Outlook (Radar Corporativo)  - versao 2
+# Proventos e Radar - Outlook do Safra (Radar Corporativo)  - versao 3
+# --auto : envia os proventos do dia aos clientes (Agendador, 8h45)
+# --rede : le os e-mails "Radar Corporativo - edicao" e regrava Radar.html nesta pasta (a cada 15 min)
 #
 # 1. Procura no Outlook o e-mail mais recente "Proventos DD/MM/AAAA" (enviado pelo Radar).
 # 2. Listas Para / Copia / Copia oculta, salvas em proventos_destinatarios.json (mesma pasta).
@@ -167,6 +169,117 @@ def rodar_auto():
         log(f"AUTO: ERRO {e!r}")
 
 
+# ---------------- Radar na rede ----------------
+RADAR_ASSUNTO = re.compile(r"^\s*(RES:|ENC:|FW:|RE:)?\s*Radar Corporativo - edicao ", re.I)
+ARQ_RADAR_HTML = os.path.join(PASTA, "Radar.html")
+ARQ_RADAR_HIST = os.path.join(PASTA, "radar_edicoes.json")
+ARQ_RADAR_LOG = os.path.join(PASTA, "radar_log.txt")
+NOME_TAREFA_RADAR = "Radar Corporativo rede"
+
+
+def log_radar(msg):
+    try:
+        with open(ARQ_RADAR_LOG, "a", encoding="utf-8") as f:
+            f.write(f"{dt.datetime.now():%d/%m/%Y %H:%M:%S}  {msg}\n")
+    except Exception:
+        pass
+
+
+def emails_radar(app):
+    ns = app.GetNamespace("MAPI")
+    achados = []
+    for pasta_id in (6, 23):
+        try:
+            itens = ns.GetDefaultFolder(pasta_id).Items
+            itens.Sort("[ReceivedTime]", True)
+        except Exception:
+            continue
+        n = 0
+        for it in itens:
+            n += 1
+            if n > 600:
+                break
+            try:
+                if it.Class == 43 and RADAR_ASSUNTO.match(it.Subject or ""):
+                    achados.append(it)
+            except Exception:
+                continue
+    achados.sort(key=lambda it: it.ReceivedTime)
+    return achados
+
+
+def ler_pacote(item):
+    import base64
+    import gzip
+    import tempfile
+    for i in range(1, item.Attachments.Count + 1):
+        att = item.Attachments.Item(i)
+        if (att.FileName or "").lower().startswith("radar"):
+            tmp = os.path.join(tempfile.gettempdir(), "radar_pacote.txt")
+            att.SaveAsFile(tmp)
+            with open(tmp, encoding="ascii") as f:
+                b64 = "".join(f.read().split())
+            os.remove(tmp)
+            return json.loads(gzip.decompress(base64.b64decode(b64)).decode("utf-8"))
+    raise RuntimeError("e-mail sem o anexo radar.txt")
+
+
+def gravar_radar(template, eds):
+    dados = json.dumps(eds, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    html = template.replace("<script>", "<script>window.RADAR_EDS = " + dados + ";</script>\n<script>", 1)
+    tmp = ARQ_RADAR_HTML + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(html)
+    os.replace(tmp, ARQ_RADAR_HTML)
+
+
+def atualizar_radar(apagar_emails=True):
+    """Junta as edicoes dos e-mails 'Radar Corporativo - edicao' no historico e regrava Radar.html."""
+    app = outlook()
+    itens = emails_radar(app)
+    if not itens:
+        return 0
+    hist = ler_json(ARQ_RADAR_HIST, {"template": "", "edicoes": []})
+    por_id = {e["id"]: e for e in hist.get("edicoes", [])}
+    template = hist.get("template", "")
+    novas = 0
+    lidos = []
+    for it in itens:
+        try:
+            pac = ler_pacote(it)
+        except Exception as e:
+            log_radar(f"REDE: nao consegui ler '{it.Subject}': {e!r}")
+            continue
+        template = pac.get("template") or template
+        for e in pac.get("edicoes", []):
+            if e["id"] not in por_id:
+                novas += 1
+            por_id[e["id"]] = e
+        lidos.append(it)
+    if not lidos or not template:
+        return 0
+    eds = sorted(por_id.values(), key=lambda e: e["ts"], reverse=True)
+    limite = (dt.date.fromisoformat(eds[0]["dia"]) - dt.timedelta(days=3)).isoformat()
+    eds = [e for e in eds if e["dia"] >= limite]
+    gravar_json(ARQ_RADAR_HIST, {"template": template, "edicoes": eds})
+    gravar_radar(template, eds)
+    log_radar(f"REDE: {len(lidos)} e-mail(s) lido(s), {novas} edicao(oes) nova(s); mais recente {eds[0]['id']}.")
+    if apagar_emails:
+        for it in lidos:
+            try:
+                it.Delete()  # vai para Itens Excluidos
+            except Exception:
+                pass
+    return novas
+
+
+def rodar_rede():
+    try:
+        atualizar_radar()
+    except Exception as e:
+        log_radar(f"REDE: ERRO {e!r}")
+
+
 # ---------------- Agendador do Windows ----------------
 def pythonw():
     pasta = os.path.dirname(sys.executable)
@@ -174,24 +287,33 @@ def pythonw():
     return p if os.path.exists(p) else sys.executable
 
 
-def agendar():
-    acao = f'"{pythonw()}" "{ARQ_PROG}" --auto'
-    cmd = ["schtasks", "/Create", "/F", "/TN", NOME_TAREFA, "/SC", "WEEKLY",
-           "/D", "MON,TUE,WED,THU,FRI", "/ST", HORA_TAREFA, "/TR", acao]
-    r = subprocess.run(cmd, capture_output=True, text=True, creationflags=0x08000000)
+def _schtasks(args):
+    r = subprocess.run(["schtasks"] + args, capture_output=True, text=True, creationflags=0x08000000)
     if r.returncode != 0:
         raise RuntimeError((r.stderr or r.stdout).strip())
+
+
+def agendar():
+    acao = f'"{pythonw()}" "{ARQ_PROG}" --auto'
+    _schtasks(["/Create", "/F", "/TN", NOME_TAREFA, "/SC", "WEEKLY",
+               "/D", "MON,TUE,WED,THU,FRI", "/ST", HORA_TAREFA, "/TR", acao])
 
 
 def desagendar():
-    r = subprocess.run(["schtasks", "/Delete", "/F", "/TN", NOME_TAREFA],
-                       capture_output=True, text=True, creationflags=0x08000000)
-    if r.returncode != 0:
-        raise RuntimeError((r.stderr or r.stdout).strip())
+    _schtasks(["/Delete", "/F", "/TN", NOME_TAREFA])
 
 
-def agendado():
-    r = subprocess.run(["schtasks", "/Query", "/TN", NOME_TAREFA],
+def agendar_radar():
+    acao = f'"{pythonw()}" "{ARQ_PROG}" --rede'
+    _schtasks(["/Create", "/F", "/TN", NOME_TAREFA_RADAR, "/SC", "MINUTE", "/MO", "15", "/TR", acao])
+
+
+def desagendar_radar():
+    _schtasks(["/Delete", "/F", "/TN", NOME_TAREFA_RADAR])
+
+
+def agendado(nome=NOME_TAREFA):
+    r = subprocess.run(["schtasks", "/Query", "/TN", nome],
                        capture_output=True, text=True, creationflags=0x08000000)
     return r.returncode == 0
 
@@ -205,8 +327,8 @@ def rodar_janela():
         def __init__(self):
             super().__init__()
             self.title("Proventos · envio pelo Outlook")
-            self.geometry("660x720")
-            self.minsize(560, 640)
+            self.geometry("680x820")
+            self.minsize(580, 720)
             self.dest = carregar_dest()
             self.origem = None
             self._montar()
@@ -253,6 +375,17 @@ def rodar_janela():
             ttk.Button(linha, text="Ativar envio 8h45", command=self.ativar).pack(side="left")
             ttk.Button(linha, text="Desativar", command=self.desativar).pack(side="left", padx=8)
             ttk.Button(linha, text="Ver histórico", command=self.ver_log).pack(side="left")
+
+            rd = ttk.LabelFrame(self, text="Radar completo na rede (Radar.html nesta pasta)")
+            rd.pack(fill="x", **pad)
+            self.lbl_radar = ttk.Label(rd, text="", font=("Segoe UI", 10))
+            self.lbl_radar.pack(anchor="w", padx=8, pady=(6, 2))
+            linha2 = ttk.Frame(rd)
+            linha2.pack(anchor="w", padx=8, pady=(2, 8))
+            ttk.Button(linha2, text="Atualizar agora", command=self.radar_agora).pack(side="left")
+            ttk.Button(linha2, text="Ativar (a cada 15 min)", command=self.radar_ativar).pack(side="left", padx=8)
+            ttk.Button(linha2, text="Desativar", command=self.radar_desativar).pack(side="left")
+            ttk.Button(linha2, text="Abrir o Radar", command=self.radar_abrir).pack(side="left", padx=8)
 
             self.lbl_status = ttk.Label(self, text="", foreground="#0C7A4E", font=("Segoe UI", 9))
             self.lbl_status.pack(anchor="w", padx=12, pady=(0, 10))
@@ -306,6 +439,47 @@ def rodar_janela():
             except Exception:
                 txt = "Não consegui consultar o Agendador"
             self.lbl_agenda.config(text=txt + ult)
+            try:
+                ativo = "ATIVO" if agendado(NOME_TAREFA_RADAR) else "Desativado"
+            except Exception:
+                ativo = "?"
+            hist = ler_json(ARQ_RADAR_HIST, {}).get("edicoes", [])
+            if hist:
+                e = hist[0]
+                quando = f"edição de {e['dia'][8:10]}/{e['dia'][5:7]} {e['ts'][11:16]}"
+            else:
+                quando = "ainda sem edições"
+            self.lbl_radar.config(text=f"{ativo}  ·  {quando}")
+
+        def radar_agora(self):
+            try:
+                n = atualizar_radar()
+                self.lbl_status.config(text=f"Radar atualizado: {n} edição(ões) nova(s).")
+            except Exception as e:
+                messagebox.showerror("Radar", str(e))
+            self.atualizar_agenda()
+
+        def radar_ativar(self):
+            try:
+                agendar_radar()
+                messagebox.showinfo("Radar", "Ativado. A cada 15 minutos o programa pega os e-mails do Radar, "
+                                    "atualiza o Radar.html nesta pasta e apaga esses e-mails (vão para Itens Excluídos).")
+            except Exception as e:
+                messagebox.showerror("Não consegui agendar", str(e))
+            self.atualizar_agenda()
+
+        def radar_desativar(self):
+            try:
+                desagendar_radar()
+            except Exception as e:
+                messagebox.showerror("Erro", str(e))
+            self.atualizar_agenda()
+
+        def radar_abrir(self):
+            if os.path.exists(ARQ_RADAR_HTML):
+                os.startfile(ARQ_RADAR_HTML)
+            else:
+                messagebox.showinfo("Radar", "O Radar.html ainda não foi gerado. Clique em \"Atualizar agora\".")
 
         def _pronto(self):
             if self.origem is None:
@@ -371,5 +545,7 @@ def rodar_janela():
 if __name__ == "__main__":
     if "--auto" in sys.argv:
         rodar_auto()
+    elif "--rede" in sys.argv:
+        rodar_rede()
     else:
         rodar_janela()
