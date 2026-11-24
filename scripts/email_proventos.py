@@ -199,9 +199,7 @@ def main():
 
     dia_txt = f"{DIAS[ref.weekday()]}, {ref.day} de {MESES[ref.month - 1]} de {ref.year}"
     n_novos = len(novos)
-    subject = (f"Proventos · {ref.day:02d}/{ref.month:02d}"
-               + (f" · {n_novos} novo{'s' if n_novos != 1 else ''}" if n_novos else " · sem novos")
-               + (f" · {len(hoje)} paga{'m' if len(hoje) != 1 else ''} hoje" if hoje else ""))
+    subject = f"Proventos {ref.day:02d}/{ref.month:02d}/{ref.year}"
     cmp_txt = (f"Novo = não estava na última edição de {datetime.fromisoformat(prev['ts']).strftime('%d/%m')}."
                if prev else "Sem edição do dia anterior para comparar os novos.")
     vig = (f'{len(br)}<span style="font-size:13px;color:{MUTED}"> BR</span>'
