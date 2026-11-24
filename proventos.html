@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Proventos · Radar Corporativo</title>
+<style>
+/* Página de proventos: barra de controle (destinatários + envio) acima do conteúdo do e-mail */
+:root{--bg:#EEF1F0;--card:#FFFFFF;--ink:#14201D;--muted:#5B6B66;--line:#D5DDDA;--accent:#1F4FA8;--new:#A35F00;--ok:#0C7A4E;
+  --f:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;--mono:Consolas,"Cascadia Mono",Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:16px 48px;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.top a{color:var(--accent);font-size:13px}
+.status{font-size:13px;color:var(--muted)}
+.status b{color:var(--ink)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.panel h2{margin:0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rcpt{display:grid;grid-template-columns:70px minmax(0,1fr);gap:8px 10px;align-items:start}
+.rcpt .lbl{font-weight:600;padding-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 10px;font-size:13px;max-width:100%}
+.chip span{overflow-wrap:anywhere}
+.chip button{border:0;background:none;color:var(--muted);font-size:16px;line-height:1;cursor:pointer;padding:0 4px;border-radius:50%}
+.chip button:hover{color:#B3261E}
+.add{display:flex;gap:6px;flex:1 1 220px;min-width:0}
+.add input{flex:1;min-width:0;font:inherit;font-size:13px;padding:5px 9px;border:1px solid var(--line);border-radius:6px}
+.add button,.btn{font:inherit;font-size:13px;font-weight:600;border-radius:6px;cursor:pointer;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-size:14px;padding:9px 16px}
+.btn:focus-visible,.add input:focus-visible,.chip button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:12px;color:var(--muted)}
+.msg{font-size:13px;padding:8px 12px;border-radius:6px;background:#E0F1E8;color:var(--ok)}
+.msg.err{background:#F9DEDC;color:#8C1D18}
+.subj{font-family:var(--mono);font-size:13px}
+#conteudo{overflow-x:auto}
+@media (max-width:520px){.rcpt{grid-template-columns:1fr}.rcpt .lbl{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="status" id="status">Carregando proventos…</div>
+    <a href="./">← Voltar ao Radar</a>
+  </div>
+
+  <section class="panel" aria-labelledby="h-env">
+    <h2 id="h-env">Enviar por e-mail</h2>
+    <div class="rcpt">
+      <div class="lbl">Para</div>
+      <div class="chips" id="to"></div>
+      <div class="lbl">Cópia</div>
+      <div class="chips" id="cc"></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="send">Enviar pelo Outlook</button>
+      <button class="btn" id="copy">Só copiar o conteúdo</button>
+      <span class="hint">Assunto: <span class="subj" id="subj">—</span></span>
+    </div>
+    <div class="msg" id="msg" hidden></div>
+    <div class="hint">Ao clicar em <b>Enviar pelo Outlook</b>, o conteúdo é copiado e abre um e-mail novo já com destinatários e assunto: clique no corpo, aperte <b>Ctrl+V</b> e envie. A lista de e-mails fica salva neste computador.</div>
+  </section>
+
+  <div id="conteudo"></div>
+</div>
+
+<script>
+(function(){
+  // ---------- destinatários (salvos neste navegador) ----------
+  const PADRAO = { to: ["mesa.aluguel@safra.com.br"], cc: ["daniela.pinter@safra.com.br","jefferson.dias@safra.com.br","william.parada@safra.com.br"] };
+  const KEY = "radar.proventos.destinatarios";
+  let rc;
+  try { rc = JSON.parse(localStorage.getItem(KEY)) || PADRAO; } catch(e){ rc = PADRAO; }
+  rc = { to: [...(rc.to||[])], cc: [...(rc.cc||[])] };
+  const salvar = () => { try { localStorage.setItem(KEY, JSON.stringify(rc)); } catch(e){} };
+  const okEmail = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#x27;"}[c]));
+
+  function drawChips(kind){
+    const box = $("#"+kind);
+    box.innerHTML = rc[kind].map((e,i) => `<span class="chip"><span>${esc(e)}</span><button aria-label="Remover ${esc(e)}" data-rm="${kind}:${i}">×</button></span>`).join("")
+      + `<form class="add" data-add="${kind}"><input type="email" id="add-${kind}" placeholder="adicionar e-mail" aria-label="Adicionar e-mail em ${kind==="to"?"Para":"Cópia"}"><button type="submit">Adicionar</button></form>`;
+  }
+  function drawAll(){ drawChips("to"); drawChips("cc"); }
+  document.addEventListener("click", ev => {
+    const b = ev.target.closest("[data-rm]"); if (!b) return;
+    const [k,i] = b.dataset.rm.split(":"); rc[k].splice(+i,1); salvar(); drawAll();
+  });
+  document.addEventListener("submit", ev => {
+    const f = ev.target.closest("[data-add]"); if (!f) return; ev.preventDefault();
+    const k = f.dataset.add, inp = f.querySelector("input");
+    const vals = inp.value.split(/[;,\s]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+    const bad = vals.filter(v => !okEmail(v));
+    if (bad.length){ show(`E-mail inválido: ${bad.join(", ")}`, true); return; }
+    vals.forEach(v => { if (!rc.to.includes(v) && !rc.cc.includes(v)) rc[k].push(v); });
+    salvar(); drawAll(); $("#add-"+k).focus(); hideMsg();
+  });
+  function show(t, err){ const m = $("#msg"); m.textContent = t; m.className = "msg" + (err ? " err" : ""); m.hidden = false; }
+  function hideMsg(){ $("#msg").hidden = true; }
+  drawAll();
+
+  // ---------- regras (as mesmas do e-mail automático) ----------
+  const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const DIAS = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+  const INK="#14201D", MUTED="#5B6B66", LINE="#D5DDDA", BG="#EEF1F0", CARD="#FFFFFF", ZEBRA="#F6F8F7", NEW="#A35F00", NEW_BG="#FBEBD3";
+  const TIPO = {jcp:["#1F4FA8","#E3EAF7","JCP"], div:["#0C7A4E","#E0F1E8","Div."], esp:["#A35F00","#FBEBD3","Div. esp."], rend:["#5B3FA8","#ECE6F7","Rend."]};
+  const FONT="Segoe UI,Arial,Helvetica,sans-serif", MONO="Consolas,Courier New,monospace";
+  const pClass = t => { const x=(t||"").toLowerCase(); return x.includes("jcp")?"jcp":(x.includes("espec")||x.includes("extra"))?"esp":x.includes("rend")?"rend":"div"; };
+  const ddmm = x => { const m=/(\d{1,2})\/(\d{1,2})/.exec(x||""); return m ? m[1].padStart(2,"0")+"/"+m[2].padStart(2,"0") : ""; };
+  const pKey = p => String(p.ticker||"").toUpperCase().trim().split(/[\s\/,]+/)[0] + "|" + pClass(p.tipo) + "|" + (ddmm(p.dataCom) || ddmm(p.pagamento));
+  const isUS = p => p.mercado === "US" || /^\s*US\$/.test(p.valor||"");
+  const dayNum = d => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+  function parseDate(x, ref){
+    const m = /(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/.exec(x||""); if (!m) return null;
+    const d=+m[1], mo=+m[2]; let y;
+    if (m[3]) { y=+m[3]; if (y<100) y+=2000; } else y = (mo < ref.getMonth()+1-2) ? ref.getFullYear()+1 : ref.getFullYear();
+    const dt = new Date(y, mo-1, d); return (dt.getMonth()===mo-1) ? dt : null;
+  }
+  const short = (s,n=140) => { s = String(s||"").replace(/\s+/g," ").trim(); return s.length<=n ? s : s.slice(0,n-1).trimEnd()+"…"; };
+  // Horário de Brasília (UTC-3, sem horário de verão)
+  const brt = iso => { const d = new Date(iso); return new Date(d.getTime() + (d.getTimezoneOffset() - 180) * 60000); };
+  const nowBRT = () => brt(new Date().toISOString());
+  const hhmm = d => String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+
+  // A página "vira" às 8h30, 12h e 18h: usa a última edição publicada até o horário vigente
+  function slotAtual(){
+    const n = nowBRT(), mins = n.getHours()*60 + n.getMinutes();
+    const slots = [[8,30],[12,0],[18,0]];
+    let s = null;
+    for (const [h,m] of slots) if (mins >= h*60+m) s = [h,m];
+    const d = new Date(n);
+    if (!s){ d.setDate(d.getDate()-1); s = [18,0]; }
+    d.setHours(s[0], s[1], 0, 0);
+    return d;
+  }
+
+  function render(eds){
+    const slot = slotAtual();
+    eds = eds.slice().sort((a,b) => a.ts < b.ts ? 1 : -1);
+    const ed = eds.find(e => brt(e.ts) <= slot) || eds[eds.length-1];
+    const ts = brt(ed.ts), ref = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate());
+    const prev = eds.find(e => e.dia < ed.dia);
+    const prevKeys = prev ? new Set((prev.proventos||[]).map(pKey)) : null;
+    const isNew = p => !!prevKeys && !prevKeys.has(pKey(p));
+    const pay = p => parseDate(p.pagamento, ref);
+    const paysToday = p => { const d = pay(p); return (d && dayNum(d) === dayNum(ref)) || /hoje/i.test(p.status||""); };
+    const provs = ed.proventos || [];
+    const br = provs.filter(p => !isUS(p)), us = provs.filter(isUS), novos = provs.filter(isNew), hoje = provs.filter(paysToday);
+    const dow = (ref.getDay()+6)%7, fim = dayNum(ref) + (6-dow);
+    const semana = provs.filter(p => { const d = pay(p); return d && dayNum(d) >= dayNum(ref) && dayNum(d) <= fim; });
+    const sortKey = (a,b) => { const da=pay(a), db=pay(b);
+      if (!!da !== !!db) return da ? -1 : 1;
+      if (da && db && dayNum(da) !== dayNum(db)) return dayNum(da) - dayNum(db);
+      const ca=parseDate(a.dataCom,ref), cb=parseDate(b.dataCom,ref);
+      return (ca?dayNum(ca):9e9) - (cb?dayNum(cb):9e9) || String(a.ticker).localeCompare(String(b.ticker)); };
+    const pill = p => { const [fg,bg] = TIPO[pClass(p.tipo)]; return `<span style="background:${bg};color:${fg};font-family:${FONT};font-size:11px;font-weight:bold;padding:2px 7px;border-radius:10px;white-space:nowrap">${esc(p.tipo||"—")}</span>`; };
+    const tipoTxt = p => { const [fg,,t] = TIPO[pClass(p.tipo)]; return `<font color="${fg}"><b>${t}</b></font>`; };
+    const section = (t, note) => `<tr><td style="padding:24px 2px 8px;font-family:${FONT};font-size:15px;font-weight:bold;color:${INK};letter-spacing:.5px">${t}${note?`<span style="font-size:12px;font-weight:normal;color:${MUTED}">&nbsp; ${note}</span>`:""}</td></tr>`;
+    const kpi = (n, l, c=INK) => `<td width="25%" align="center" bgcolor="${CARD}" style="padding:14px 6px;border:1px solid ${LINE}"><div style="font-family:${FONT};font-size:26px;font-weight:bold;color:${c};line-height:1.15">${n}</div><div style="font-family:${FONT};font-size:11px;color:${MUTED};text-transform:uppercase;letter-spacing:.5px;padding-top:2px">${l}</div></td>`;
+    const card = p => {
+      const datas = [["Data com",p.dataCom],["Ex",p.dataEx],["Pagamento",p.pagamento]].filter(([,v]) => v && v !== "—")
+        .map(([l,v]) => `${l} <b style="font-family:${MONO}">${esc(v)}</b>`).join(" &nbsp;·&nbsp; ");
+      const obs = short(p.obs);
+      return `<tr><td style="padding:0 0 8px"><table width="100%" cellpadding="0" cellspacing="0" bgcolor="${CARD}" style="border:1px solid ${LINE}"><tr><td width="5" bgcolor="${NEW}" style="font-size:1px">&nbsp;</td><td style="padding:10px 14px;font-family:${FONT};font-size:13px;color:${INK}"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-family:${FONT};color:${INK}"><span style="font-family:${MONO};font-size:15px;font-weight:bold">${esc(p.ticker)}</span>&nbsp; <span style="font-size:14px">${esc(p.empresa)}</span>&nbsp; <span style="font-size:10px;color:${MUTED};font-weight:bold">${isUS(p)?"EUA":"BR"}</span></td><td align="right" style="font-family:${MONO};font-size:15px;font-weight:bold;color:${INK};white-space:nowrap">${esc(p.valor||"—")}</td></tr></table><div style="padding-top:6px">${pill(p)}&nbsp; <span style="font-size:12px;color:${MUTED}">${datas || "Datas ainda não divulgadas"}</span></div>${obs?`<div style="padding-top:4px;font-size:12px;color:${MUTED}">${esc(obs)}</div>`:""}</td></tr></table></td></tr>`;
+    };
+    const mini = arr => `<tr><td><table width="100%" cellpadding="7" cellspacing="0" style="border:1px solid ${LINE}">${arr.slice().sort(sortKey).map((p,i) => `<tr bgcolor="${i%2?ZEBRA:CARD}"><td style="font-family:${MONO};font-weight:bold;font-size:13px;color:${INK}">${esc(p.ticker)}</td><td style="font-family:${FONT};font-size:13px;color:${INK}">${esc(p.empresa)}</td><td>${pill(p)}</td><td align="right" style="font-family:${MONO};font-size:13px;color:${INK};white-space:nowrap">${esc(p.valor||"—")}</td></tr>`).join("")}</table></td></tr>`;
+    const HEAD = ["Ticker","Empresa","Tipo","Valor/ação","Data com","Data ex","Pagamento"];
+    const table = arr => {
+      if (!arr.length) return `<tr><td style="font-family:${FONT};font-size:13px;color:${MUTED}">Nenhum provento vigente.</td></tr>`;
+      const g = [["Pagam nos próximos 7 dias",[]],["Pagam de 8 a 30 dias",[]],["Pagam em mais de 30 dias",[]],["Data de pagamento a definir",[]]];
+      arr.slice().sort(sortKey).forEach(p => { const d = pay(p); const k = d ? dayNum(d) - dayNum(ref) : null;
+        (k === null ? g[3] : k <= 7 ? g[0] : k <= 30 ? g[1] : g[2])[1].push(p); });
+      let h = `<tr><td><table width="100%" cellpadding="6" cellspacing="0" style="border:1px solid ${LINE};font-family:${FONT};font-size:12px;color:${INK}"><tr bgcolor="${INK}">${HEAD.map(x => `<td style="font-family:${FONT};font-size:10px;font-weight:bold;color:#FFFFFF;letter-spacing:.5px">${x.toUpperCase()}</td>`).join("")}</tr>`;
+      for (const [name, rows] of g){
+        if (!rows.length) continue;
+        h += `<tr bgcolor="${BG}"><td colspan="7"><b>${name}</b> <font color="${MUTED}">(${rows.length})</font></td></tr>`;
+        rows.forEach((p,i) => { const nv = isNew(p), hj = paysToday(p);
+          h += `<tr bgcolor="${nv?NEW_BG:(i%2?ZEBRA:CARD)}"><td><b>${esc(p.ticker)}</b>${nv?` <font color="${NEW}" size="1"><b>NOVO</b></font>`:""}</td><td>${esc(p.empresa)}</td><td>${tipoTxt(p)}</td><td>${esc(p.valor||"—")}</td><td>${esc(p.dataCom||"—")}</td><td>${esc(p.dataEx||"—")}</td><td>${esc(p.pagamento||"—")}${hj?` <font color="${NEW}" size="1"><b>HOJE</b></font>`:""}</td></tr>`; });
+      }
+      return h + `</table></td></tr>`;
+    };
+    const diaTxt = `${DIAS[ref.getDay()]}, ${ref.getDate()} de ${MESES[ref.getMonth()]} de ${ref.getFullYear()}`;
+    const vig = `${br.length}<span style="font-size:13px;color:${MUTED}"> BR</span> <span style="color:${LINE}">|</span> ${us.length}<span style="font-size:13px;color:${MUTED}"> EUA</span>`;
+    const cmp = prev ? `Novo = não estava na última edição de ${prev.dia.slice(8,10)}/${prev.dia.slice(5,7)}.` : "Sem edição do dia anterior para comparar os novos.";
+    let body = `<table width="100%" cellpadding="0" cellspacing="0" bgcolor="${BG}"><tr><td align="center" style="padding:0">`
+      + `<table width="760" cellpadding="0" cellspacing="0" style="max-width:760px">`
+      + `<tr><td bgcolor="${INK}" style="padding:20px 22px;font-family:${FONT}"><div style="font-size:11px;color:#8FD3B6;letter-spacing:2px;font-weight:bold">RADAR CORPORATIVO</div><div style="font-size:24px;color:#FFFFFF;font-weight:bold;padding-top:4px">Proventos vigentes</div><div style="font-size:13px;color:#C9D3D0;padding-top:4px">${diaTxt} &nbsp;·&nbsp; edição das ${hhmm(ts)}</div></td></tr>`
+      + `<tr><td style="padding-top:10px"><table width="100%" cellpadding="0" cellspacing="6"><tr>${kpi(novos.length,"Novos hoje",novos.length?NEW:INK)}${kpi(hoje.length,"Pagam hoje")}${kpi(semana.length,"Pagam esta semana")}${kpi(vig,"Vigentes")}</tr></table></td></tr>`;
+    if (novos.length){ body += section("NOVOS HOJE", `${novos.length} anúncio(s) desde a edição de ontem`); body += novos.slice().sort((a,b) => (isUS(a)-isUS(b)) || sortKey(a,b)).map(card).join(""); }
+    if (hoje.length){ body += section("PAGAM HOJE", `${hoje.length} provento(s)`) + mini(hoje); }
+    body += section("BRASIL · R$", `${br.length} vigentes, por data de pagamento`) + table(br);
+    body += section("EUA · US$", `${us.length} vigentes, por data de pagamento`) + table(us);
+    body += `<tr><td style="padding:18px 2px 4px;font-family:${FONT};font-size:11px;color:${MUTED};line-height:1.5">${cmp} Linhas em laranja = novos. Painel completo: <a href="https://radar-corp.pages.dev" style="color:#1F4FA8">radar-corp.pages.dev</a>.<br>Dados compilados de fontes públicas; confirme valores e datas no comunicado oficial da companhia antes de operar.</td></tr>`
+      + `</table></td></tr></table>`;
+    $("#conteudo").innerHTML = body;
+
+    const subj = `Proventos ${String(ref.getDate()).padStart(2,"0")}/${String(ref.getMonth()+1).padStart(2,"0")}/${ref.getFullYear()}`;
+    $("#subj").textContent = subj;
+    const slotTxt = `${String(slot.getDate()).padStart(2,"0")}/${String(slot.getMonth()+1).padStart(2,"0")} às ${hhmm(slot)}`;
+    $("#status").innerHTML = `Atualização de <b>${slotTxt}</b> · edição das ${hhmm(ts)} · próximas: 8h30, 12h e 18h`;
+    state.subj = subj;
+  }
+
+  // ---------- envio ----------
+  const state = { subj: "Proventos" };
+  async function copiar(){
+    const el = $("#conteudo");
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:16px 8px;background:${BG}">${el.innerHTML}</body></html>`;
+    try {
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+        await navigator.clipboard.write([new ClipboardItem({
+          "text/html": new Blob([html], {type:"text/html"}),
+          "text/plain": new Blob([el.innerText], {type:"text/plain"}) })]);
+        return true;
+      }
+    } catch(e){}
+    // Plano B: seleciona o conteúdo e usa o copiar do navegador
+    try {
+      const r = document.createRange(); r.selectNode(el);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      const ok = document.execCommand("copy"); s.removeAllRanges(); return ok;
+    } catch(e){ return false; }
+  }
+  $("#send").addEventListener("click", async () => {
+    if (!rc.to.length && !rc.cc.length){ show("Cadastre pelo menos um e-mail em Para ou Cópia.", true); return; }
+    const ok = await copiar();
+    const enc = a => a.map(encodeURIComponent).join(";");
+    const url = `mailto:${enc(rc.to)}?` + [rc.cc.length ? `cc=${enc(rc.cc)}` : "", `subject=${encodeURIComponent(state.subj)}`].filter(Boolean).join("&");
+    window.location.href = url;
+    show(ok ? "Conteúdo copiado. No e-mail que abriu, clique no corpo, aperte Ctrl+V e envie."
+            : "O e-mail abriu, mas o navegador não deixou copiar. Volte aqui, selecione as tabelas, copie (Ctrl+C) e cole no e-mail.", !ok);
+  });
+  $("#copy").addEventListener("click", async () => {
+    const ok = await copiar();
+    show(ok ? "Conteúdo copiado. Cole (Ctrl+V) no corpo de um e-mail." : "O navegador não deixou copiar. Selecione as tabelas e use Ctrl+C.", !ok);
+  });
+
+  // ---------- dados ----------
+  let lastStamp = "";
+  async function load(){
+    try {
+      const r = await fetch("data/edicoes.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const eds = await r.json();
+      const stamp = eds.map(e => e.id).join(",") + "|" + slotAtual().getTime();
+      if (stamp === lastStamp) return;
+      lastStamp = stamp;
+      if (!eds.length){ $("#status").textContent = "Nenhuma edição publicada ainda."; return; }
+      render(eds);
+    } catch(e){
+      if (!lastStamp) $("#status").textContent = "Não foi possível carregar os proventos. Verifique a conexão e recarregue a página.";
+    }
+  }
+  load();
+  setInterval(load, 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
