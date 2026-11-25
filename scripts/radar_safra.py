@@ -37,7 +37,42 @@ def template_offline(html):
     return html
 
 
+MARCA_INI = "-----RADAR-INICIO-----"
+MARCA_FIM = "-----RADAR-FIM-----"
+
+
+def corpo(arq_ed, out):
+    """Modo --corpo: a edicao mais recente (sem a lista de fontes) em JSON, para ir no CORPO do e-mail.
+    As execucoes agendadas nao conseguem anexar arquivos no Gmail."""
+    eds = json.load(open(arq_ed, encoding="utf-8"))
+    eds.sort(key=lambda e: e["ts"], reverse=True)
+    ult = dict(eds[0])
+    ult.pop("fontes", None)
+    c = lambda v: json.dumps(v, ensure_ascii=False, separators=(",", ":"))
+    linhas = []
+    for k, v in ult.items():
+        if isinstance(v, list):
+            linhas.append(c(k) + ":[\n" + ",\n".join(c(i) for i in v) + "\n]")
+        else:
+            linhas.append(c(k) + ":" + c(v))
+    js = "{\n" + ",\n".join(linhas) + "\n}"
+    assert json.loads(js) == ult
+    texto = ("Edicao automatica do Radar Corporativo para a rede do Safra. "
+             "O programa no PC do banco le este e-mail e o apaga.\n\n"
+             f"{MARCA_INI}\n{js}\n{MARCA_FIM}\n")
+    os.makedirs(out, exist_ok=True)
+    caminho = os.path.abspath(os.path.join(out, "radar_corpo.txt"))
+    with open(caminho, "w", encoding="utf-8", newline="\n") as f:
+        f.write(texto)
+    d, hhmm = ult["dia"], ult["ts"][11:16]
+    print(json.dumps({"subject": f"{PREFIXO} {d[8:10]}/{d[5:7]}/{d[0:4]} {hhmm}", "id": ult["id"],
+                      "path": caminho, "bytes": os.path.getsize(caminho)}, ensure_ascii=False))
+
+
 def main():
+    if "--corpo" in sys.argv:
+        args = [a for a in sys.argv[1:] if a != "--corpo"]
+        return corpo(args[0], args[-1])
     arq_ed, arq_html, out = sys.argv[1:4]
     eds = json.load(open(arq_ed, encoding="utf-8"))
     eds.sort(key=lambda e: e["ts"], reverse=True)

@@ -1,4 +1,4 @@
-# Proventos e Radar - Outlook do Safra (Radar Corporativo)  - versao 4
+# Proventos e Radar - Outlook do Safra (Radar Corporativo)  - versao 5
 # Le a caixa compartilhada mesa.aluguel (e a sua) e pode enviar em nome dela.
 # --auto : envia os proventos do dia aos clientes (Agendador, 8h45)
 # --rede : le os e-mails "Radar Corporativo - edicao" e regrava Radar.html nesta pasta (a cada 15 min)
@@ -316,7 +316,14 @@ def ler_pacote(item):
                 b64 = "".join(f.read().split())
             os.remove(tmp)
             return json.loads(gzip.decompress(base64.b64decode(b64)).decode("utf-8"))
-    raise RuntimeError("e-mail sem o anexo radar.txt")
+    # sem anexo: a edicao vem no corpo do e-mail, entre as marcas
+    corpo = item.Body or ""
+    i = corpo.find("-----RADAR-INICIO-----")
+    f = corpo.find("-----RADAR-FIM-----")
+    if i < 0 or f < i:
+        raise RuntimeError("e-mail sem os dados do Radar (nem anexo, nem corpo)")
+    ed = json.loads(corpo[i + len("-----RADAR-INICIO-----"):f].strip())
+    return {"edicoes": [ed]}
 
 
 def gravar_radar(template, eds):
@@ -349,11 +356,13 @@ def _atualizar_radar(apagar_emails):
     template = hist.get("template", "")
     novas = 0
     lidos = []
+    ruins = []
     for it in itens:
         try:
             pac = ler_pacote(it)
         except Exception as e:
             log_radar(f"REDE: nao consegui ler '{it.Subject}': {e!r}")
+            ruins.append(it)
             continue
         template = pac.get("template") or template
         for e in pac.get("edicoes", []):
@@ -361,13 +370,22 @@ def _atualizar_radar(apagar_emails):
                 novas += 1
             por_id[e["id"]] = e
         lidos.append(it)
-    if not lidos or not template:
+    if apagar_emails:
+        for it in ruins:  # e-mail com dados corrompidos: registra no log e descarta
+            try:
+                it.Delete()
+            except Exception:
+                pass
+    if not lidos:
         return 0
     eds = sorted(por_id.values(), key=lambda e: e["ts"], reverse=True)
     limite = (dt.date.fromisoformat(eds[0]["dia"]) - dt.timedelta(days=3)).isoformat()
     eds = [e for e in eds if e["dia"] >= limite]
     gravar_json(ARQ_RADAR_HIST, {"template": template, "edicoes": eds})
-    gravar_radar(template, eds)
+    if template:
+        gravar_radar(template, eds)
+    else:
+        log_radar("REDE: edicoes guardadas, mas falta o modelo da pagina (vem no e-mail com anexo radar.txt).")
     log_radar(f"REDE: {len(lidos)} e-mail(s) lido(s), {novas} edicao(oes) nova(s); mais recente {eds[0]['id']}.")
     if apagar_emails:
         for it in lidos:
