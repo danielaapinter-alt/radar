@@ -299,6 +299,12 @@ def _rodar_auto():
             est["recebido"] = recebido(origem)
             gravar_json(ARQ_ESTADO, est)
             return
+        if "chaves" not in est:  # estado de versao antiga: so registra a lista, sem reenviar
+            est["chaves"] = sorted(chaves)
+            est["recebido"] = recebido(origem)
+            gravar_json(ARQ_ESTADO, est)
+            log("AUTO: lista de proventos registrada (primeira vez nesta versao).")
+            return
         novas = chaves - set(est.get("chaves", []))
         if not novas:
             log(f"AUTO: e-mail das {recebido(origem)[11:16]} sem proventos novos; nao reenviei.")
