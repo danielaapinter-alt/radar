@@ -89,8 +89,15 @@ def main():
     prev = next((e for e in eds if e["dia"] < ed["dia"]), None)
     prev_keys = {p_key(p) for p in prev.get("proventos", [])} if prev else None
 
+    # e-mails de 12h/18h: o que entrou desde a edicao usada no envio da manha (ate 8h30)
+    base_manha = None
+    if ts.hour >= 11:
+        base_manha = next((e for e in eds if e["dia"] == ed["dia"] and e["ts"][11:16] <= "08:30"), None)
+    keys_manha = {p_key(p) for p in base_manha.get("proventos", [])} if base_manha else None
+
     def is_new(p):
-        return prev_keys is not None and p_key(p) not in prev_keys
+        return (prev_keys is not None and p_key(p) not in prev_keys) or \
+               (keys_manha is not None and p_key(p) not in keys_manha)
 
     def pay(p):
         return parse_date(p.get("pagamento"), ref)
@@ -101,7 +108,8 @@ def main():
     provs = ed.get("proventos") or []
     br = [p for p in provs if not is_us(p)]
     us = [p for p in provs if is_us(p)]
-    novos = [p for p in provs if is_new(p)]
+    novos = [p for p in provs if prev_keys is not None and p_key(p) not in prev_keys]
+    novos_manha = [p for p in provs if keys_manha is not None and p_key(p) not in keys_manha]
     hoje = [p for p in provs if pays_today(p)]
     fim_semana = ref + timedelta(days=6 - ref.weekday())
     semana = [p for p in provs if pay(p) and ref <= pay(p) <= fim_semana]
@@ -222,6 +230,10 @@ def main():
         + kpi(vig, "Vigentes")
         + "</tr></table></td></tr>",
     ]
+    if novos_manha:
+        body.append(section_title("ATUALIZAÇÃO · NOVOS DESDE O ENVIO DA MANHÃ",
+                                  f"{len(novos_manha)} anúncio(s) depois da edição das {base_manha['ts'][11:16]}"))
+        body.extend(card(p) for p in sorted(novos_manha, key=lambda p: (is_us(p), sort_key(p))))
     if novos:
         body.append(section_title("NOVOS HOJE", f"{n_novos} anúncio(s) desde a edição de ontem"))
         body.extend(card(p) for p in sorted(novos, key=lambda p: (is_us(p), sort_key(p))))
@@ -241,7 +253,11 @@ def main():
         f'{cmp_txt} Linhas em laranja = novos. Painel completo: '
         f'<a href="https://radar-corp.pages.dev" style="color:#1F4FA8">radar-corp.pages.dev</a>.<br>'
         f'Dados compilados de fontes públicas; confirme valores e datas no comunicado oficial da companhia antes de operar.</td></tr>'
-        f'</table></td></tr></table></body></html>')
+        f'</table></td></tr></table>'
+        # marcador invisivel lido pelo programa do Safra para saber se ha proventos novos desde o ultimo envio
+        f'<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:0">'
+        f'PROVKEYS[{esc(";".join(sorted({p_key(p) for p in provs})))}]</div>'
+        f'</body></html>')
     body_html = "".join(body)
 
     def txt_rows(arr):
@@ -252,6 +268,7 @@ def main():
 
     body_txt = (f"RADAR CORPORATIVO - Proventos vigentes - {dia_txt}\n"
                 f"Novos hoje: {n_novos} | Pagam hoje: {len(hoje)} | Vigentes: {len(br)} BR, {len(us)} EUA\n\n"
+                + (f"NOVOS DESDE O ENVIO DA MANHA\n{txt_rows(novos_manha)}\n\n" if novos_manha else "")
                 + (f"NOVOS HOJE\n{txt_rows(novos)}\n\n" if novos else "")
                 + f"BRASIL - JCP (R$)\n{txt_rows([p for p in br if p_class(p.get('tipo')) == 'jcp'])}\n\n"
                 + f"BRASIL - DIVIDENDOS E DEMAIS (R$)\n{txt_rows([p for p in br if p_class(p.get('tipo')) != 'jcp'])}\n\n"
@@ -260,7 +277,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     open(os.path.join(OUT, "email_proventos.html"), "w", encoding="utf-8").write(body_html)
     open(os.path.join(OUT, "email_proventos.txt"), "w", encoding="utf-8").write(body_txt)
-    meta = {"subject": subject, "edicao": ed["id"], "n_br": len(br), "n_us": len(us), "novos": n_novos,
+    meta = {"subject": subject, "edicao": ed["id"], "n_br": len(br), "n_us": len(us), "novos": n_novos, "novos_desde_manha": len(novos_manha),
             "pagam_hoje": len(hoje), "html_bytes": len(body_html.encode("utf-8"))}
     open(os.path.join(OUT, "email_proventos.json"), "w", encoding="utf-8").write(json.dumps(meta, ensure_ascii=False))
     print(json.dumps(meta, ensure_ascii=False))

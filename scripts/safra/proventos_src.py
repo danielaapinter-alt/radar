@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# Proventos e Radar - Outlook do Safra (Radar Corporativo)  - versao 5
+# Proventos e Radar - Outlook do Safra (Radar Corporativo)  - versao 6
+# v6: reenvia o e-mail de proventos quando o das 12h/18h trouxer provento novo (nao enviado no dia).
 # Le a caixa compartilhada mesa.aluguel (e a sua) e pode enviar em nome dela.
 # --auto : envia os proventos do dia aos clientes (Agendador, 8h45)
 # --rede : le os e-mails "Radar Corporativo - edicao" e regrava Radar.html nesta pasta (a cada 15 min)
@@ -82,12 +83,35 @@ def log(msg):
         pass
 
 
-def marcar_enviado(origem, modo):
+MARCA = re.compile(r"PROVKEYS\[([^\]]*)\]")
+MARCA_DIV = re.compile(r"<div[^>]*>\s*PROVKEYS\[[^\]]*\]\s*</div>", re.I)
+
+
+def chaves_do_email(origem):
+    """Lista de proventos do e-mail (marcador invisivel PROVKEYS[...]); None se nao tiver."""
+    m = MARCA.search(origem.HTMLBody or "")
+    if not m:
+        return None
+    return {k.strip().replace("&amp;", "&") for k in m.group(1).split(";") if k.strip()}
+
+
+def recebido(origem):
+    return origem.ReceivedTime.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def marcar_enviado(origem, modo, chaves=None):
+    est = ler_json(ARQ_ESTADO, {})
+    hoje = dt.date.today().isoformat()
+    antigas = set(est.get("chaves", [])) if est.get("ultimo_envio") == hoje else set()
+    novas = chaves if chaves is not None else chaves_do_email(origem)
     gravar_json(ARQ_ESTADO, {
-        "ultimo_envio": dt.date.today().isoformat(),
+        "ultimo_envio": hoje,
         "assunto": origem.Subject,
         "modo": modo,
         "quando": f"{dt.datetime.now():%d/%m/%Y %H:%M}",
+        "recebido": recebido(origem),
+        "chaves": sorted(antigas | (novas or set())),
+        "envios_hoje": (est.get("envios_hoje", 0) if est.get("ultimo_envio") == hoje else 0) + 1,
     })
 
 
@@ -152,7 +176,10 @@ def pastas_busca(app):
 
 
 def ultimo_email_proventos(app):
+    """E-mail 'Proventos DD/MM/AAAA' mais recente vindo do Radar (com o marcador PROVKEYS).
+    Copias reenviadas pelo proprio programa nao tem o marcador e so valem se nao houver outro."""
     melhor = None
+    reserva = None
     for pasta in pastas_busca(app):
         try:
             itens = pasta.Items
@@ -168,12 +195,17 @@ def ultimo_email_proventos(app):
                 if it.Class != 43:
                     continue
                 if ASSUNTO.match(it.Subject or ""):
-                    if melhor is None or it.ReceivedTime > melhor.ReceivedTime:
-                        melhor = it
-                    break
+                    if "PROVKEYS[" in (it.HTMLBody or ""):
+                        if melhor is None or it.ReceivedTime > melhor.ReceivedTime:
+                            melhor = it
+                        break
+                    if reserva is None or it.ReceivedTime > reserva.ReceivedTime:
+                        reserva = it
             except Exception:
                 continue
-    return melhor
+    if melhor is not None and reserva is not None and not eh_de_hoje(melhor) and eh_de_hoje(reserva):
+        return reserva
+    return melhor or reserva
 
 
 def eh_de_hoje(origem):
@@ -184,13 +216,13 @@ def eh_de_hoje(origem):
     return dt.date(a, mes, d) == dt.date.today()
 
 
-def montar_email(app, origem, dest):
+def montar_email(app, origem, dest, sufixo=""):
     m = app.CreateItem(0)
     m.To = "; ".join(dest["to"])
     m.CC = "; ".join(dest["cc"])
     m.BCC = "; ".join(dest["bcc"])
-    m.Subject = re.sub(r"^\s*(RES:|ENC:|FW:|RE:)\s*", "", origem.Subject or "", flags=re.I).strip()
-    m.HTMLBody = origem.HTMLBody
+    m.Subject = re.sub(r"^\s*(RES:|ENC:|FW:|RE:)\s*", "", origem.Subject or "", flags=re.I).strip() + sufixo
+    m.HTMLBody = MARCA_DIV.sub("", origem.HTMLBody or "")
     cfg = carregar_config()
     if cfg["enviar_em_nome"] and cfg["caixa"]:
         m.SentOnBehalfOfName = cfg["caixa"]
@@ -223,45 +255,60 @@ def soltar(caminho):
 
 
 # ---------------- modo automatico (Agendador do Windows) ----------------
+# Roda de 15 em 15 min, das 8h45 as 19h45 (dias uteis):
+#  - se ainda nao enviou hoje: envia o e-mail de proventos do dia;
+#  - se ja enviou: quando chega um e-mail de proventos mais novo (12h, 18h) com algum provento
+#    que ainda nao foi enviado hoje, reenvia para todos com "- atualizacao HHh" no assunto.
 def rodar_auto():
-    hoje = dt.date.today().isoformat()
-    for f in os.listdir(PASTA):  # limpa travas de dias anteriores
-        if f.startswith("proventos_envio_") and f.endswith(".lock") and hoje not in f:
-            soltar(os.path.join(PASTA, f))
-    lk = trava(f"proventos_envio_{hoje}.lock", 24 * 60)
+    lk = trava("proventos_envio.lock", 10)
     if not lk:
-        log("AUTO: outro computador ja esta enviando ou ja enviou hoje, nada a fazer.")
+        log("AUTO: outro computador esta enviando agora, nada a fazer.")
         return
-    ok = False
     try:
-        ok = _rodar_auto()
+        _rodar_auto()
     finally:
-        if not ok:
-            soltar(lk)
+        soltar(lk)
 
 
 def _rodar_auto():
     try:
-        if ja_enviado_hoje():
-            log("AUTO: ja foi enviado hoje, nada a fazer.")
-            return True
+        hoje = dt.date.today().isoformat()
+        est = ler_json(ARQ_ESTADO, {})
+        ja_foi = est.get("ultimo_envio") == hoje
         dest = carregar_dest()
         if not any(dest[k] for k in CHAVES):
             log("AUTO: lista de destinatarios vazia, nao enviei.")
             return
         app = outlook()
         origem = ultimo_email_proventos(app)
-        if origem is None:
-            log("AUTO: nenhum e-mail 'Proventos' encontrado, nao enviei.")
+        if origem is None or not eh_de_hoje(origem):
+            if not ja_foi:
+                log("AUTO: o e-mail de proventos de hoje ainda nao chegou.")
             return
-        if not eh_de_hoje(origem):
-            log(f"AUTO: o mais recente e '{origem.Subject}' (nao e de hoje), nao enviei.")
-            return
-        montar_email(app, origem, dest).Send()
-        marcar_enviado(origem, "automatico")
         n = sum(len(dest[k]) for k in CHAVES)
-        log(f"AUTO: enviado '{origem.Subject}' para {n} destinatario(s).")
-        return True
+        if not ja_foi:
+            montar_email(app, origem, dest).Send()
+            marcar_enviado(origem, "automatico")
+            log(f"AUTO: enviado '{origem.Subject}' para {n} destinatario(s).")
+            return
+        if recebido(origem) <= est.get("recebido", ""):
+            return  # nenhum e-mail novo desde o ultimo envio
+        chaves = chaves_do_email(origem)
+        if chaves is None:
+            log(f"AUTO: '{origem.Subject}' recebido {recebido(origem)} sem a lista de proventos; nao reenviei.")
+            est["recebido"] = recebido(origem)
+            gravar_json(ARQ_ESTADO, est)
+            return
+        novas = chaves - set(est.get("chaves", []))
+        if not novas:
+            log(f"AUTO: e-mail das {recebido(origem)[11:16]} sem proventos novos; nao reenviei.")
+            est["recebido"] = recebido(origem)
+            gravar_json(ARQ_ESTADO, est)
+            return
+        sufixo = f" - atualização {dt.datetime.now():%H}h"
+        montar_email(app, origem, dest, sufixo).Send()
+        marcar_enviado(origem, "atualizacao", chaves)
+        log(f"AUTO: ATUALIZACAO enviada ({len(novas)} provento(s) novo(s): {', '.join(sorted(novas))[:300]}) para {n} destinatario(s).")
     except Exception as e:
         log(f"AUTO: ERRO {e!r}")
 
@@ -420,7 +467,7 @@ def _schtasks(args):
 def agendar():
     acao = f'"{pythonw()}" "{ARQ_PROG}" --auto'
     _schtasks(["/Create", "/F", "/TN", NOME_TAREFA, "/SC", "WEEKLY",
-               "/D", "MON,TUE,WED,THU,FRI", "/ST", HORA_TAREFA, "/RI", "15", "/DU", "01:15", "/TR", acao])
+               "/D", "MON,TUE,WED,THU,FRI", "/ST", HORA_TAREFA, "/RI", "15", "/DU", "11:00", "/TR", acao])
 
 
 def desagendar():
@@ -457,6 +504,11 @@ def rodar_janela():
             self.origem = None
             self._montar()
             self.atualizar_origem()
+            try:  # atualiza a tarefa do Windows para o horario desta versao (8h45 a 19h45)
+                if agendado():
+                    agendar()
+            except Exception:
+                pass
             self.atualizar_agenda()
 
         def _montar(self):
@@ -496,7 +548,7 @@ def rodar_janela():
             ttk.Button(rod, text="Enviar agora", command=self.enviar).pack(side="left")
             ttk.Button(rod, text="Abrir no Outlook (conferir antes)", command=self.abrir).pack(side="left", padx=8)
 
-            ag = ttk.LabelFrame(self, text="Envio automático (seg a sex, 8h45)")
+            ag = ttk.LabelFrame(self, text="Envio automático (seg a sex, 8h45 + atualizações 12h/18h)")
             ag.pack(fill="x", **pad)
             self.lbl_agenda = ttk.Label(ag, text="", font=("Segoe UI", 10))
             self.lbl_agenda.pack(anchor="w", padx=8, pady=(6, 2))
@@ -573,7 +625,7 @@ def rodar_janela():
             est = ler_json(ARQ_ESTADO, {})
             ult = f"  ·  último envio: {est['quando']} ({est['modo']})" if est.get("quando") else ""
             try:
-                txt = "ATIVO — envia sozinho às 8h45" if agendado() else "Desativado"
+                txt = "ATIVO — 8h45 e atualizações até 19h45" if agendado() else "Desativado"
             except Exception:
                 txt = "Não consegui consultar o Agendador"
             self.lbl_agenda.config(text=txt + ult)
@@ -658,8 +710,9 @@ def rodar_janela():
                 agendar()
                 messagebox.showinfo("Envio automático",
                                     "Ativado. De segunda a sexta, às 8h45, o e-mail de proventos do dia "
-                                    "sai sozinho para a lista cadastrada. Se o e-mail das 8h30 atrasar, "
-                                    "o programa tenta de novo a cada 15 min até as 10h.\n\n"
+                                    "sai sozinho para a lista cadastrada (se o e-mail das 8h30 atrasar, ele tenta de novo a cada 15 min).\n\n"
+                                    "Depois, até as 19h45: se o e-mail das 12h ou das 18h trouxer algum provento "
+                                    "que ainda não foi enviado hoje, ele reenvia para todos com \"atualização\" no assunto.\n\n"
                                     "O computador precisa estar ligado e com você logada.")
             except Exception as e:
                 messagebox.showerror("Não consegui agendar", str(e))
