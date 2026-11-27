@@ -250,8 +250,7 @@ def main():
     body.append(market_table(us))
     body.append(
         f'<tr><td style="padding:18px 2px 4px;font-family:{FONT};font-size:11px;color:{MUTED};line-height:1.5">'
-        f'{cmp_txt} Linhas em laranja = novos. Painel completo: '
-        f'<a href="https://radar-corp.pages.dev" style="color:#1F4FA8">radar-corp.pages.dev</a>.<br>'
+        f'{cmp_txt} Linhas em laranja = novos. Painel completo: Radar.html na pasta da rede da mesa.<br>'
         f'Dados compilados de fontes públicas; confirme valores e datas no comunicado oficial da companhia antes de operar.</td></tr>'
         f'</table></td></tr></table>'
         # marcador invisivel lido pelo programa do Safra para saber se ha proventos novos desde o ultimo envio
